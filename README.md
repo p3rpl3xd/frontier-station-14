@@ -52,9 +52,11 @@ Voice chat is off until the server config enables it. After `dotnet build`, put 
 ```toml
 [voice]
 enabled = true
-public_url = https://example.com/voice/
-ws_bind = 127.0.0.1:1213
+public_url = "https://example.com/voice/"
+ws_bind = "127.0.0.1:1213"
 ```
+
+Quote string values. This server's TOML parser rejects a bare `https://` URL.
 
 The microphone page needs a secure context. HTTP on localhost works for the host. Any other machine, including Radmin or another LAN/VPN address, needs HTTPS. Reverse-proxy `/voice/` to the status port and `/voice/ws` to `ws_bind`. Details, the Caddy example, and the rest of the `[voice]` keys are in [Content.VoiceChat/README.md](Content.VoiceChat/README.md). A copy of the snippet is [Content.VoiceChat/voice.example.toml](Content.VoiceChat/voice.example.toml).
 

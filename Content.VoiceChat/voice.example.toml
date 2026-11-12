@@ -9,5 +9,5 @@
 
 [voice]
 enabled = true
-public_url = https://example.com/voice/
-ws_bind = 127.0.0.1:1213
+public_url = "https://example.com/voice/"
+ws_bind = "127.0.0.1:1213"

@@ -115,11 +115,11 @@ Names match the old Goob `voice.*` CVars. Server and client both load `VoiceCVar
 ```
 [voice]
 enabled = true
-public_url = https://example.com/voice/
-ws_bind = 127.0.0.1:1213
-trusted_proxies =
+public_url = "https://example.com/voice/"
+ws_bind = "127.0.0.1:1213"
+trusted_proxies = ""
 max_connections_per_ip = 6
-ws_url =
+ws_url = ""
 radio_enabled = true
 radio_common = false
 bitrate = 64
@@ -132,6 +132,8 @@ whisper_range = 3
 shout_threshold = 14
 whisper_threshold = 5
 ```
+
+On this fork, quote string values. A bare `https://` URL makes Nett refuse the config file.
 
 Client-only, saved in the player config: `voice.volume` (0–2), `voice.hear_self`, `voice.speaker_list`, `voice.radio_volume`, `voice.radio_muted`.
 
@@ -171,9 +173,11 @@ Voice is off until `enabled` is true. Put this in `server_config.toml` next to t
 ```toml
 [voice]
 enabled = true
-public_url = https://example.com/voice/
-ws_bind = 127.0.0.1:1213
+public_url = "https://example.com/voice/"
+ws_bind = "127.0.0.1:1213"
 ```
+
+Quote every string. Frontier's TOML parser (Nett) rejects a bare URL: `public_url = https://example.com/voice/` fails to load the whole file.
 
 `public_url` is the page the client opens. `ws_bind` is the voice audio socket. Leave it on loopback.
 
