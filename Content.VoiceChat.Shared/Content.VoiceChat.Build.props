@@ -1,0 +1,23 @@
+<!--
+SPDX-FileCopyrightText: 2026 Aidenkrz <28298836+Aidenkrz@users.noreply.github.com>
+SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<Project>
+  <!--
+    The SDK rejects a project whose TargetFramework is still empty when inference runs
+    (NETSDK1013). Engine 267 sets it only inside Robust.Properties.targets, which is too
+    late for some SDK 9 builds. Read the framework the engine itself declares.
+  -->
+  <PropertyGroup>
+    <_VoiceEnginePropsPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../RobustToolbox/MSBuild/Robust.Engine.props'))</_VoiceEnginePropsPath>
+    <_VoiceEngineProps Condition="Exists('$(_VoiceEnginePropsPath)')">$([System.IO.File]::ReadAllText('$(_VoiceEnginePropsPath)'))</_VoiceEngineProps>
+    <_VoiceTargetFramework>$([System.Text.RegularExpressions.Regex]::Match('$(_VoiceEngineProps)', 'TargetFramework&gt;(net\d+\.\d+)&lt;').Groups.get_Item(1).Value)</_VoiceTargetFramework>
+    <TargetFramework Condition="'$(_VoiceTargetFramework)' != ''">$(_VoiceTargetFramework)</TargetFramework>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net9.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <WarningsNotAsErrors>nullable</WarningsNotAsErrors>
+  </PropertyGroup>
+</Project>

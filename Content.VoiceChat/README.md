@@ -26,7 +26,7 @@ Copy these directories next to `Content.Server` / `Content.Client`:
 
 | Directory | Required | Role |
 | --- | --- | --- |
-| `Content.VoiceChat.Shared` | yes | CVars, codec, net messages, components |
+| `Content.VoiceChat.Shared` | yes | CVars, codec, net messages. `Content.VoiceChat.Build.props` in this folder sets the target framework from the engine, which SDK 9 needs. |
 | `Content.VoiceChat.Server` | yes | Proximity, websocket, embedded `/voice` page. `EntryPoint` registers IoC. |
 | `Content.VoiceChat.Client` | yes | Playback, push-to-talk, connect window. `EntryPoint` registers IoC. |
 | `Content.VoiceChat.Effects` | optional | NWaves muffling and the voice-of-god pitch effect |

@@ -5,7 +5,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\Content.VoiceChat.Shared\Content.VoiceChat.Build.props" />
   <PropertyGroup>
+    <TargetFramework>$(TargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
     <WarningsNotAsErrors>nullable</WarningsNotAsErrors>
