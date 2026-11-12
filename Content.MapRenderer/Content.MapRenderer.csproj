@@ -1,5 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TargetFramework">
   <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net9.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <OutputPath>..\bin\Content.MapRenderer\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

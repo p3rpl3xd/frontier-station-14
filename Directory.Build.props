@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    Stop MSBuild from walking out of this repo for a parent Directory.Build.props.
+    The fallback runs after each project is evaluated and fills a blank TargetFramework
+    with net9.0. It does not touch projects that set TargetFramework or TargetFrameworks.
+  -->
+  <PropertyGroup>
+    <BeforeTargetFrameworkInferenceTargets Condition="'$(BeforeTargetFrameworkInferenceTargets)' == ''">$(MSBuildThisFileDirectory)MSBuild/TargetFrameworkFallback.targets</BeforeTargetFrameworkInferenceTargets>
+  </PropertyGroup>
+</Project>

@@ -4,11 +4,11 @@ SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TargetFramework">
   <Import Project="Content.VoiceChat.Build.props" />
   <PropertyGroup>
-    <!-- Re-assign so the SDK sees a framework set by this project, not only by an import. -->
-    <TargetFramework>$(TargetFramework)</TargetFramework>
+    <!-- Literal net9.0 in this file. $(TargetFramework) copies an empty global value, and SDK 9 then reports NETSDK1013. -->
+    <TargetFramework>net9.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
     <WarningsNotAsErrors>nullable</WarningsNotAsErrors>
