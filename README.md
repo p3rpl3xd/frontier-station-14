@@ -45,6 +45,19 @@ Build the server using `dotnet build`.
 
 [More detailed instructions on building the project.](https://docs.spacestation14.com/en/general-development/setup.html)
 
+## Proximity voice
+
+Voice chat is off until the server config enables it. After `dotnet build`, put this in `bin/Content.Server/server_config.toml` (or pass `--config-file`):
+
+```toml
+[voice]
+enabled = true
+public_url = https://example.com/voice/
+ws_bind = 127.0.0.1:1213
+```
+
+The microphone page needs a secure context. HTTP on localhost works for the host. Any other machine, including Radmin or another LAN/VPN address, needs HTTPS. Reverse-proxy `/voice/` to the status port and `/voice/ws` to `ws_bind`. Details, the Caddy example, and the rest of the `[voice]` keys are in [Content.VoiceChat/README.md](Content.VoiceChat/README.md). A copy of the snippet is [Content.VoiceChat/voice.example.toml](Content.VoiceChat/voice.example.toml).
+
 ## License
 
 Read [LEGAL.md](https://github.com/new-frontiers-14/frontier-station-14/blob/master/LEGAL.md) for legal information regarding code licensing, including a table of attributions for each namespace within the codebase.

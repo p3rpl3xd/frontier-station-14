@@ -47,6 +47,7 @@ The table below lists all Namespaces (along with the Nyanotrasen subdirectory) i
 | `_RMC14` | RMC-14 | https://github.com/RMC-14/RMC-14 | MIT |
 | `_Starlight` | Starlight | https://github.com/ss14Starlight/space-station-14 | MIT (Modified) |
 (https://github.com/ss14Starlight/space-station-14/blob/starlight-dev/LICENSE-Starlight.TXT)
+| `_VoiceChat` | Goob Station proximity voice | https://github.com/p3rpl3xd/Goob-Station/commit/9b6b4c8018 | AGPL-3.0-or-later |
 
 Additional repositories with ported code without Namespaces (denoted by comments) are listed below.
 
@@ -55,6 +56,17 @@ Additional repositories with ported code without Namespaces (denoted by comments
 | Monolith | https://github.com/Monolith-Station/Monolith | AGPL 3.0 |
 | Space Station 14 ("Wizden"/"Upstream") | https://github.com/space-wizards/space-station-14 | MIT |
 | White Dream | https://github.com/WWhiteDreamProject/wwdpublic | AGPL 3.0 |
+| Goob Station proximity voice (`Content.VoiceChat*`, authors Aidenkrz and Aiden) | https://github.com/p3rpl3xd/Goob-Station/commit/9b6b4c8018 | AGPL-3.0-or-later |
+
+## Third-party notices
+
+Proximity voice chat pulls in two libraries that are not AGPL. Their notices are also in [Content.VoiceChat/THIRD-PARTY-NOTICES.md](Content.VoiceChat/THIRD-PARTY-NOTICES.md).
+
+| Component | Where | License |
+|-----------|--------|---------|
+| [NWaves](https://github.com/ar1st0crat/NWaves) 0.9.6, Copyright (c) 2017 Tim (Tim Sharii, ar1st0crat) | NuGet package referenced by `Content.VoiceChat.Effects`. Not vendored. | MIT. The license text is copied in `Content.VoiceChat/THIRD-PARTY-NOTICES.md`. |
+| Noto Sans (`noto-sans-regular.woff2`, `noto-sans-bold.woff2`) | Embedded in the voice page | Apache-2.0. Full text: `Content.VoiceChat.Server/VoiceChat/Web/NotoSans-LICENSE.txt`. |
+| Boxfont Round (`boxfont-round.woff2`) | Embedded in the voice page | CC-0. Credits: `Content.VoiceChat.Server/VoiceChat/Web/Boxfont-round-credits.txt`. |
 
 ## Warranty
 

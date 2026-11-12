@@ -24,6 +24,10 @@ Goob-Station
 
 Copyright (C) Goob Station 2024-2025
 
+Proximity voice chat (Content.VoiceChat)
+
+Copyright (C) Aidenkrz and Aiden 2026
+
 Impstation
 
 Copyright (C) Impstation 2024-2025

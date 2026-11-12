@@ -1,0 +1,13 @@
+# Example only. Voice stays off until this is copied into the server config
+# (bin/Content.Server/server_config.toml, or a file passed with --config-file).
+# This file is not loaded automatically.
+#
+# Microphone capture needs a secure context. HTTP on localhost works for the
+# host. Other machines on a LAN or VPN such as Radmin need HTTPS.
+# Proxy /voice/ to the status port (status.bind, usually *:1212) and
+# /voice/ws to ws_bind. Do not publish ws_bind on the internet.
+
+[voice]
+enabled = true
+public_url = https://example.com/voice/
+ws_bind = 127.0.0.1:1213

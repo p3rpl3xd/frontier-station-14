@@ -491,4 +491,11 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
     {
         return this.IsPowered(entity, EntityManager);
     }
+
+    // Frontier: proximity voice. StateStartTime is only writable by the telephone system.
+    public void KeepCallAlive(Entity<TelephoneComponent> entity)
+    {
+        if (entity.Comp.CurrentState == TelephoneState.InCall)
+            entity.Comp.StateStartTime = _timing.CurTime;
+    }
 }

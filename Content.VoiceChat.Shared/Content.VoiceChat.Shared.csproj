@@ -1,0 +1,32 @@
+<!--
+SPDX-FileCopyrightText: 2026 Aidenkrz <28298836+Aidenkrz@users.noreply.github.com>
+SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
+    <WarningsNotAsErrors>nullable</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Content.Shared\Content.Shared.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\RobustToolbox\Imports\Shared.props" Condition="Exists('..\RobustToolbox\Imports\Shared.props')" />
+  <ItemGroup Condition="!Exists('..\RobustToolbox\Imports\Shared.props')">
+    <ProjectReference Include="..\RobustToolbox\Robust.Shared\Robust.Shared.csproj" />
+    <ProjectReference Include="..\RobustToolbox\Robust.Shared.Maths\Robust.Shared.Maths.csproj" Condition="Exists('..\RobustToolbox\Robust.Shared.Maths\Robust.Shared.Maths.csproj')" />
+    <ProjectReference Include="..\RobustToolbox\NetSerializer\NetSerializer\NetSerializer.csproj" Condition="Exists('..\RobustToolbox\NetSerializer\NetSerializer\NetSerializer.csproj')" />
+    <ProjectReference Include="..\RobustToolbox\Lidgren.Network\Lidgren.Network.csproj" Condition="Exists('..\RobustToolbox\Lidgren.Network\Lidgren.Network.csproj')" />
+  </ItemGroup>
+  <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\RobustToolbox\MSBuild\Robust.CompNetworkGenerator.targets" Condition="Exists('..\RobustToolbox\MSBuild\Robust.CompNetworkGenerator.targets')" />
+
+  <PropertyGroup>
+    <!-- Stay on a language version both engine 267 (net9) and 293 (net10) can compile. -->
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+</Project>
