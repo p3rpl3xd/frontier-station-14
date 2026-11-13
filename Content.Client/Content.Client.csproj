@@ -23,13 +23,6 @@
     <ProjectReference Include="..\RobustToolbox\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\RobustToolbox\Robust.Client\Robust.Client.csproj" />
     <ProjectReference Include="..\Content.Shared\Content.Shared.csproj" />
-    <!-- Frontier: portable proximity voice. -->
-    <ProjectReference Include="..\Content.VoiceChat.Client\Content.VoiceChat.Client.csproj" />
-    <ProjectReference Include="..\Content.VoiceChat.Shared\Content.VoiceChat.Shared.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Frontier: stock voice client adapters (voice logs). Voice-of-god cue is not compiled. -->
-    <Compile Include="..\Content.VoiceChat.Adapters\Client\Stock\**\*.cs" Link="VoiceChatAdapters\%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
   <Import Project="..\RobustToolbox\MSBuild\XamlIL.targets" />

@@ -8,7 +8,7 @@ using Content.VoiceChat.Shared;
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
 using Content.Server.EUI;
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_SHARED_TICKER
 using Content.Shared.GameTicking;
 #else
 using Content.Server.GameTicking;

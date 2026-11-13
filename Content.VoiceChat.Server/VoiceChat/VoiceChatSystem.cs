@@ -11,7 +11,9 @@ using Content.Shared.Clothing.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
 using Content.Shared.Mobs.Systems;
+#if VOICECHAT_INGESTION_BLOCKER
 using Content.Shared.Nutrition.Components;
+#endif
 using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
 using Content.Shared.Tag;
@@ -753,9 +755,13 @@ public sealed partial class VoiceChatSystem : EntitySystem
 
     private bool CoversMouth(EntityUid item)
     {
+#if VOICECHAT_INGESTION_BLOCKER
         return TryComp<IngestionBlockerComponent>(item, out var blocker) &&
                blocker.Enabled &&
                !(TryComp<MaskComponent>(item, out var mask) && mask.IsToggled);
+#else
+        return HasComp<MaskComponent>(item);
+#endif
     }
 
     private bool IsMuzzled(EntityUid uid)

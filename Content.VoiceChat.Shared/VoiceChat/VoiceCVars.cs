@@ -6,7 +6,6 @@ using Robust.Shared.Configuration;
 
 namespace Content.VoiceChat.Shared;
 
-// Frontier: RobustToolbox 267 loads CVars only from types marked [CVarDefs].
 [CVarDefs]
 public static class VoiceCVars
 {

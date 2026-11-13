@@ -27,18 +27,6 @@
     <ProjectReference Include="..\RobustToolbox\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\RobustToolbox\Robust.Server\Robust.Server.csproj" />
     <ProjectReference Include="..\Content.Shared\Content.Shared.csproj" />
-    <!-- Frontier: portable proximity voice (core server + NWaves muffling). -->
-    <ProjectReference Include="..\Content.VoiceChat.Server\Content.VoiceChat.Server.csproj" />
-    <ProjectReference Include="..\Content.VoiceChat.Effects\Content.VoiceChat.Effects.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Frontier: stock voice adapters (radio, telephone, station AI, logs, voice mask, pressure).
-         Goob-only and voice-of-god adapters are intentionally not compiled. -->
-    <Compile Include="..\Content.VoiceChat.Adapters\Server\Stock\**\*.cs" Link="VoiceChatAdapters\Stock\%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
-  <PropertyGroup>
-    <!-- Frontier: ActiveRadioComponent is still in Content.Server.Radio.Components and channels are HashSet&lt;string&gt;. -->
-    <DefineConstants>$(DefineConstants);VOICECHAT_SERVER_COMPONENTS</DefineConstants>
-  </PropertyGroup>
 </Project>

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_SHARED_VOICE_MASK
 using Content.Shared.VoiceMask;
 #else
 using Content.Server.VoiceMask;
@@ -55,10 +55,10 @@ public sealed partial class VoiceMaskFeature : EntitySystem, IVoiceFeature
 
     private bool IsActive(EntityUid uid)
     {
-#if VOICECHAT_SERVER_COMPONENTS
-        return HasComp<VoiceMaskComponent>(uid);
-#else
+#if VOICECHAT_VOICE_MASK_ACTIVE
         return TryComp<VoiceMaskComponent>(uid, out var mask) && mask.Active;
+#else
+        return HasComp<VoiceMaskComponent>(uid);
 #endif
     }
 }

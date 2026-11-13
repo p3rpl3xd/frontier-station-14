@@ -58,7 +58,7 @@ public sealed partial class TelephoneVoiceFeature : EntitySystem, IVoiceFeature
 
             foreach (var linked in telephone.LinkedTelephones)
             {
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_UID_TELEPHONE
                 var linkedUid = linked;
                 if (linkedUid == uid ||
                     TerminatingOrDeleted(linkedUid) ||
@@ -86,7 +86,7 @@ public sealed partial class TelephoneVoiceFeature : EntitySystem, IVoiceFeature
 
                 var relayRange = linkedPhone.SpeakerVolume == TelephoneVolume.Speak ? contribution.DirectRange : 3f;
                 var relayRoute = HasComp<HolopadComponent>(
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_UID_TELEPHONE
                     linkedUid
 #else
                     linked
@@ -94,7 +94,7 @@ public sealed partial class TelephoneVoiceFeature : EntitySystem, IVoiceFeature
                     ) ? VoiceRoute.Holopad : VoiceRoute.Telephone;
                 contribution.Relays.Add(new VoiceRelay(emitter, emitterOrigin, relayRange, relayRoute));
                 contribution.KeepAwake.Add(
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_UID_TELEPHONE
                     linkedUid
 #else
                     linked.Owner
@@ -112,7 +112,7 @@ public sealed partial class TelephoneVoiceFeature : EntitySystem, IVoiceFeature
         _telephone.KeepCallAlive((entity, telephone));
     }
 
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_UID_TELEPHONE
     private EntityUid RelayEmitter(EntityUid telephone, TelephoneComponent component)
     {
         if (TryComp<HolopadComponent>(telephone, out var holopad) &&

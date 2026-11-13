@@ -2,10 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Content.Packaging;
 using NUnit.Framework;
+using Robust.Packaging;
+using Robust.Packaging.AssetProcessing.Passes;
 using Robust.Shared.Analyzers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
@@ -20,43 +24,83 @@ namespace Content.Tests.Client;
 public sealed class LauncherSandboxAczTest
 {
     [Test]
-    public void ServedClientAssembliesPassSandbox()
+    public async Task ServedClientAssembliesPassSandbox()
     {
         var root = FindRepoRoot();
-        var bin = Path.Combine(root, "bin", "Content.Client");
-        var served = ClientPackaging.ClientContentAssemblies;
-        Assert.That(served, Does.Contain("Content.VoiceChat.Client"));
-        Assert.That(served, Does.Contain("Content.VoiceChat.Shared"));
-        Assert.That(served, Does.Not.Contain("NWaves"));
+        var clientBin = Path.Combine(root, "bin", "Content.Client");
 
-        using var temp = new TempAssemblies();
-        foreach (var name in served)
+        // A leftover from the old separate-project install must not survive the client build.
+        Assert.That(Directory.GetFiles(clientBin, "Content.VoiceChat.*.dll"), Is.Empty,
+            "bin/Content.Client still has a Content.VoiceChat DLL. The client build should delete it.");
+
+        // Even if one appears after the build, the zip writer only copies the named content assemblies.
+        var staleName = "Content.VoiceChat.Shared.dll";
+        var stalePath = Path.Combine(clientBin, staleName);
+        await File.WriteAllBytesAsync(stalePath, new byte[] { 0x4D, 0x5A });
+        try
         {
-            var source = Path.Combine(bin, name + ".dll");
-            Assert.That(File.Exists(source), Is.True, $"{name}.dll is missing from bin/Content.Client, so the client zip cannot serve it.");
-            File.Copy(source, Path.Combine(temp.Path, name + ".dll"));
+            var zipPath = Path.Combine(Path.GetTempPath(), "frontier-acz-" + Guid.NewGuid().ToString("N") + ".zip");
+            try
+            {
+                await WriteAczZip(root, zipPath);
+                using var zip = ZipFile.OpenRead(zipPath);
+                var names = zip.Entries.Select(entry => entry.FullName.Replace('\\', '/')).ToList();
+                Assert.That(names, Does.Not.Contain("Assemblies/" + staleName));
+                Assert.That(names.Any(name => name.Contains("Content.VoiceChat.", StringComparison.Ordinal)), Is.False,
+                    "The client zip must not contain a Content.VoiceChat assembly.");
+
+                var served = names
+                    .Where(name => name.StartsWith("Assemblies/", StringComparison.Ordinal) && name.EndsWith(".dll", StringComparison.Ordinal))
+                    .Select(name => name["Assemblies/".Length..])
+                    .ToList();
+                Assert.That(served, Does.Contain("Content.Client.dll"));
+                Assert.That(served, Does.Contain("Content.Shared.dll"));
+
+                using var temp = new TempAssemblies();
+                foreach (var dll in served)
+                {
+                    var entry = zip.GetEntry("Assemblies/" + dll) ?? zip.GetEntry("Assemblies\\" + dll);
+                    Assert.That(entry, Is.Not.Null, dll);
+                    entry!.ExtractToFile(Path.Combine(temp.Path, dll));
+                }
+
+                var engineDirs = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(assembly => !assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location))
+                    .Select(assembly => Path.GetDirectoryName(assembly.Location)!)
+                    .Distinct(StringComparer.Ordinal)
+                    .Where(dir => !File.Exists(Path.Combine(dir, staleName)))
+                    .ToArray();
+
+                var sawmill = new CollectingSawmill();
+                var checker = CreateChecker(sawmill, temp.Path, engineDirs);
+                var check = checker.GetType().GetMethod("CheckAssembly", new[] { typeof(string) })!;
+                foreach (var dll in served.Where(name => name.StartsWith("Content.", StringComparison.Ordinal)))
+                {
+                    sawmill.Errors.Clear();
+                    var passed = (bool) check.Invoke(checker, new object[] { Path.Combine(temp.Path, dll) })!;
+                    Assert.That(passed, Is.True, dll + " failed the launcher sandbox:\n" + string.Join('\n', sawmill.Errors));
+                }
+            }
+            finally
+            {
+                if (File.Exists(zipPath))
+                    File.Delete(zipPath);
+            }
         }
-
-        // Engine directories only. bin/Content.Client also contains the voice DLLs, and adding it
-        // would hide a zip that forgot to ship them.
-        var engineDirs = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(assembly => !assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location))
-            .Select(assembly => Path.GetDirectoryName(assembly.Location)!)
-            .Distinct(StringComparer.Ordinal)
-            .Where(dir => !File.Exists(Path.Combine(dir, "Content.VoiceChat.Shared.dll")))
-            .ToArray();
-
-        var sawmill = new CollectingSawmill();
-        var checker = CreateChecker(sawmill, temp.Path, engineDirs);
-        var check = checker.GetType().GetMethod("CheckAssembly", new[] { typeof(string) })!;
-
-        foreach (var name in served)
+        finally
         {
-            sawmill.Errors.Clear();
-            var path = Path.Combine(temp.Path, name + ".dll");
-            var passed = (bool) check.Invoke(checker, new object[] { path })!;
-            Assert.That(passed, Is.True, name + " failed the launcher sandbox:\n" + string.Join('\n', sawmill.Errors));
+            if (File.Exists(stalePath))
+                File.Delete(stalePath);
         }
+    }
+
+    private static async Task WriteAczZip(string root, string zipPath)
+    {
+        await using var stream = File.Create(zipPath);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Create);
+        var writer = new AssetPassZipWriter(zip) { Compression = CompressionLevel.NoCompression };
+        await ClientPackaging.WriteResources(root, writer, new QuietPackageLogger(), default);
+        await writer.FinishedTask;
     }
 
     private static object CreateChecker(ISawmill sawmill, string servedDir, string[] engineDirs)
@@ -92,6 +136,13 @@ public sealed class LauncherSandboxAczTest
         }
 
         throw new InvalidOperationException("Could not find the repository root from " + AppContext.BaseDirectory);
+    }
+
+    private sealed class QuietPackageLogger : IPackageLogger
+    {
+        public void Log(LogLevel level, string msg)
+        {
+        }
     }
 
     private sealed class TempAssemblies : IDisposable

@@ -1,0 +1,152 @@
+<!--
+SPDX-FileCopyrightText: 2026 Aidenkrz <28298836+Aidenkrz@users.noreply.github.com>
+SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<Project>
+  <!--
+    Compiles proximity voice into the fork's existing Content.Shared, Content.Client,
+    and Content.Server assemblies. There is no Content.VoiceChat.*.dll, so the launcher
+    sandbox and the client zip do not have to learn a new assembly.
+    Import this from the repository Directory.Build.targets.
+  -->
+
+  <PropertyGroup>
+    <_VoiceSharedDir>$(MSBuildThisFileDirectory)</_VoiceSharedDir>
+    <_VoiceRepo>$(_VoiceSharedDir)..\</_VoiceRepo>
+    <_VoiceClientDir>$(_VoiceRepo)Content.VoiceChat.Client\</_VoiceClientDir>
+    <_VoiceServerDir>$(_VoiceRepo)Content.VoiceChat.Server\</_VoiceServerDir>
+    <_VoiceEffectsDir>$(_VoiceRepo)Content.VoiceChat.Effects\</_VoiceEffectsDir>
+    <_VoiceAdaptersDir>$(_VoiceRepo)Content.VoiceChat.Adapters\</_VoiceAdaptersDir>
+    <_VoiceIsShared Condition="'$(MSBuildProjectName)' == 'Content.Shared'">true</_VoiceIsShared>
+    <_VoiceIsClient Condition="'$(MSBuildProjectName)' == 'Content.Client'">true</_VoiceIsClient>
+    <_VoiceIsServer Condition="'$(MSBuildProjectName)' == 'Content.Server'">true</_VoiceIsServer>
+    <_VoiceIsGoobServer Condition="'$(MSBuildProjectName)' == 'Content.Goobstation.Server'">true</_VoiceIsGoobServer>
+    <_VoiceHost Condition="'$(_VoiceIsShared)' == 'true' or '$(_VoiceIsClient)' == 'true' or '$(_VoiceIsServer)' == 'true' or '$(_VoiceIsGoobServer)' == 'true'">true</_VoiceHost>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_VoiceIsShared)' == 'true'">
+    <Compile Include="$(_VoiceSharedDir)GlobalUsings.cs" Link="VoiceChat\GlobalUsings.cs" />
+    <Compile Include="$(_VoiceSharedDir)VoiceChat\**\*.cs" Link="VoiceChat\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_VoiceIsClient)' == 'true'">
+    <Compile Include="$(_VoiceClientDir)GlobalUsings.cs" Link="VoiceChat\GlobalUsings.cs" />
+    <Compile Include="$(_VoiceClientDir)Entry\**\*.cs" Link="VoiceChat\Entry\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceClientDir)VoiceChat\**\*.cs" Link="VoiceChat\VoiceChat\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceAdaptersDir)Client\Stock\**\*.cs" Link="VoiceChat\Adapters\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceAdaptersDir)Client\God\**\*.cs" Link="VoiceChat\God\%(RecursiveDir)%(Filename)%(Extension)" Condition="'$(VoiceChatIncludeGod)' == 'true'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_VoiceIsServer)' == 'true'">
+    <Compile Include="$(_VoiceServerDir)GlobalUsings.cs" Link="VoiceChat\GlobalUsings.cs" />
+    <Compile Include="$(_VoiceServerDir)Entry\**\*.cs" Link="VoiceChat\Entry\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceServerDir)VoiceChat\**\*.cs" Link="VoiceChat\VoiceChat\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceEffectsDir)**\*.cs" Exclude="$(_VoiceEffectsDir)**\GlobalUsings.cs;$(_VoiceEffectsDir)obj\**\*;$(_VoiceEffectsDir)bin\**\*" Link="VoiceChat\Effects\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceAdaptersDir)Server\Stock\**\*.cs" Link="VoiceChat\Adapters\Stock\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(_VoiceAdaptersDir)Server\God\**\*.cs" Link="VoiceChat\Adapters\God\%(RecursiveDir)%(Filename)%(Extension)" Condition="'$(VoiceChatIncludeGod)' == 'true'" />
+    <EmbeddedResource Include="$(_VoiceServerDir)VoiceChat\Web\**\*.*" Link="VoiceChat\Web\%(RecursiveDir)%(Filename)%(Extension)">
+      <LogicalName>VoiceChat.Web.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <PackageReference Include="NWaves" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_VoiceIsGoobServer)' == 'true' and Exists('$(_VoiceRepo)Content.Goobstation.Shared\Loudspeaker\Components\LoudspeakerHolderComponent.cs')">
+    <Compile Include="$(_VoiceAdaptersDir)Server\Goob\**\*.cs" Link="VoiceChat\Adapters\Goob\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="VoiceChatCheckInstall" BeforeTargets="CoreCompile" Condition="'$(_VoiceHost)' == 'true'">
+    <Error Condition="!Exists('$(_VoiceSharedDir)VoiceChat\VoiceCVars.cs')"
+           Text="Voice chat sources are missing. Copy Content.VoiceChat.Shared, Content.VoiceChat.Client, Content.VoiceChat.Server, Content.VoiceChat.Effects, Content.VoiceChat.Adapters, and Resources/Locale/en-US/_VoiceChat next to Content.Server." />
+
+    <PropertyGroup>
+      <_VoicePackages>$(_VoiceRepo)Directory.Packages.props</_VoicePackages>
+      <_VoiceRadioProto>$(_VoiceRepo)Content.Shared\Radio\RadioChannelPrototype.cs</_VoiceRadioProto>
+      <_VoiceMaskShared>$(_VoiceRepo)Content.Shared\VoiceMask\VoiceMaskComponent.cs</_VoiceMaskShared>
+      <_VoiceMaskServer>$(_VoiceRepo)Content.Server\VoiceMask\VoiceMaskComponent.cs</_VoiceMaskServer>
+      <_VoiceTickerShared>$(_VoiceRepo)Content.Shared\GameTicking\GameTicker.cs</_VoiceTickerShared>
+      <_VoicePhone>$(_VoiceRepo)Content.Shared\Telephone\TelephoneComponent.cs</_VoicePhone>
+      <_VoiceActiveRadioServer>$(_VoiceRepo)Content.Server\Radio\Components\ActiveRadioComponent.cs</_VoiceActiveRadioServer>
+      <_VoiceListenerServer>$(_VoiceRepo)Content.Server\Speech\Components\ActiveListenerComponent.cs</_VoiceListenerServer>
+      <_VoiceListenerShared>$(_VoiceRepo)Content.Shared\Speech\Components\ActiveListenerComponent.cs</_VoiceListenerShared>
+      <_VoiceIngestion>$(_VoiceRepo)Content.Shared\Nutrition\Components\IngestionBlockerComponent.cs</_VoiceIngestion>
+      <_VoiceRadioEvent>$(_VoiceRepo)Content.Server\Radio\RadioEvent.cs</_VoiceRadioEvent>
+      <_VoiceVision>$(_VoiceRepo)Content.Shared\Silicons\StationAi\StationAiVisionComponent.cs</_VoiceVision>
+      <_VoiceTelephoneSystem>$(MSBuildProjectDirectory)\Telephone\TelephoneSystem.cs</_VoiceTelephoneSystem>
+    </PropertyGroup>
+
+    <ReadLinesFromFile File="$(_VoicePackages)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoicePackages)')">
+      <Output TaskParameter="Lines" ItemName="_VoicePackageLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup Condition="'$(_VoiceIsServer)' == 'true'">
+      <_VoicePackageBlob>@(_VoicePackageLines, ' ')</_VoicePackageBlob>
+    </PropertyGroup>
+    <Error Condition="'$(_VoiceIsServer)' == 'true' and !Exists('$(_VoicePackages)')"
+           Text="Voice chat effects need NWaves 0.9.6. This repo has no Directory.Packages.props. Add a PackageVersion for NWaves." />
+    <Error Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoicePackages)') and !$(_VoicePackageBlob.Contains('NWaves'))"
+           Text="Voice chat effects need NWaves. Add this line to Directory.Packages.props inside the PackageVersion item group: &lt;PackageVersion Include=&quot;NWaves&quot; Version=&quot;0.9.6&quot; /&gt;" />
+
+    <ReadLinesFromFile File="$(_VoiceTelephoneSystem)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceTelephoneSystem)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceTelephoneLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup Condition="'$(_VoiceIsServer)' == 'true'">
+      <_VoiceTelephoneBlob>@(_VoiceTelephoneLines, ' ')</_VoiceTelephoneBlob>
+    </PropertyGroup>
+    <Error Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceTelephoneSystem)') and !$(_VoiceTelephoneBlob.Contains('KeepCallAlive'))"
+           Text="Telephone voice needs TelephoneSystem.KeepCallAlive. Add this method to Content.Server/Telephone/TelephoneSystem.cs: public void KeepCallAlive(Entity&lt;TelephoneComponent&gt; entity) { if (entity.Comp.CurrentState == TelephoneState.InCall) entity.Comp.StateStartTime = _timing.CurTime; }" />
+    <Error Condition="'$(_VoiceIsServer)' == 'true' and !Exists('$(_VoiceTelephoneSystem)')"
+           Text="Telephone voice looks for Content.Server/Telephone/TelephoneSystem.cs and did not find it. If this fork has no telephones, delete Content.VoiceChat.Adapters/Server/Stock/TelephoneVoiceFeature.cs before building." />
+
+    <ReadLinesFromFile File="$(_VoiceRadioProto)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceRadioProto)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceRadioLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_VoiceMaskShared)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceMaskShared)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceMaskLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_VoiceMaskServer)" Condition="'$(_VoiceIsServer)' == 'true' and !Exists('$(_VoiceMaskShared)') and Exists('$(_VoiceMaskServer)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceMaskLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_VoicePhone)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoicePhone)')">
+      <Output TaskParameter="Lines" ItemName="_VoicePhoneLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_VoiceRadioEvent)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceRadioEvent)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceRadioEventLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_VoiceVision)" Condition="'$(_VoiceIsServer)' == 'true' and Exists('$(_VoiceVision)')">
+      <Output TaskParameter="Lines" ItemName="_VoiceVisionLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup Condition="'$(_VoiceIsServer)' == 'true'">
+      <_VoiceRadioBlob>@(_VoiceRadioLines, ' ')</_VoiceRadioBlob>
+      <_VoiceMaskBlob>@(_VoiceMaskLines, ' ')</_VoiceMaskBlob>
+      <_VoicePhoneBlob>@(_VoicePhoneLines, ' ')</_VoicePhoneBlob>
+      <_VoiceRadioEventBlob>@(_VoiceRadioEventLines, ' ')</_VoiceRadioEventBlob>
+      <_VoiceVisionBlob>@(_VoiceVisionLines, ' ')</_VoiceVisionBlob>
+      <DefineConstants Condition="Exists('$(_VoiceActiveRadioServer)')">$(DefineConstants);VOICECHAT_SERVER_COMPONENTS</DefineConstants>
+      <DefineConstants Condition="Exists('$(_VoiceListenerServer)') and !Exists('$(_VoiceListenerShared)')">$(DefineConstants);VOICECHAT_SERVER_SPEECH</DefineConstants>
+      <DefineConstants Condition="Exists('$(_VoiceTickerShared)')">$(DefineConstants);VOICECHAT_SHARED_TICKER</DefineConstants>
+      <DefineConstants Condition="Exists('$(_VoiceMaskShared)')">$(DefineConstants);VOICECHAT_SHARED_VOICE_MASK</DefineConstants>
+      <DefineConstants Condition="$(_VoiceMaskBlob.Contains('bool Active'))">$(DefineConstants);VOICECHAT_VOICE_MASK_ACTIVE</DefineConstants>
+      <DefineConstants Condition="$(_VoiceRadioBlob.Contains('SendWhitelist'))">$(DefineConstants);VOICECHAT_RADIO_EXTRAS</DefineConstants>
+      <DefineConstants Condition="$(_VoicePhoneBlob.Contains('EntityUid&gt; LinkedTelephones'))">$(DefineConstants);VOICECHAT_UID_TELEPHONE</DefineConstants>
+      <DefineConstants Condition="Exists('$(_VoiceIngestion)')">$(DefineConstants);VOICECHAT_INGESTION_BLOCKER</DefineConstants>
+      <DefineConstants Condition="$(_VoiceRadioEventBlob.Contains('RadioSource, int Frequency'))">$(DefineConstants);VOICECHAT_RADIO_SEND_FREQUENCY</DefineConstants>
+      <_VoiceStationAi Condition="Exists('$(_VoiceVision)') and $(_VoiceVisionBlob.Contains('NeedsPower'))">true</_VoiceStationAi>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_VoiceIsServer)' == 'true' and '$(_VoiceStationAi)' != 'true'">
+      <Compile Remove="$(_VoiceAdaptersDir)Server\Stock\StationAiVoiceFeature.cs" />
+    </ItemGroup>
+
+    <Message Importance="high" Condition="'$(_VoiceIsServer)' == 'true'"
+             Text="Voice chat symbols: $(DefineConstants)" />
+  </Target>
+
+  <Target Name="VoiceChatRemoveSeparateAssemblies" AfterTargets="Build" Condition="'$(_VoiceIsClient)' == 'true' or '$(_VoiceIsServer)' == 'true'">
+    <!-- A leftover Content.VoiceChat.*.dll is loaded by the client and fails the sandbox. -->
+    <ItemGroup>
+      <_StaleVoiceDll Include="$(TargetDir)Content.VoiceChat.*.dll" />
+      <_StaleVoiceDll Include="$(TargetDir)Content.VoiceChat.*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_StaleVoiceDll)" />
+  </Target>
+</Project>

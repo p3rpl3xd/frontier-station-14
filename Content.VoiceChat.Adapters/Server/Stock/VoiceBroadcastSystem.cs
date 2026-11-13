@@ -6,7 +6,7 @@ using Content.VoiceChat.Shared;
 using Content.Server.Administration.Logs;
 using Content.Server.Communications;
 using Content.Server.Power.EntitySystems;
-#if VOICECHAT_UPSTREAM
+#if VOICECHAT_SHARED_TICKER
 using Content.Shared.Station.Systems;
 #else
 using Content.Server.Station.Systems;
