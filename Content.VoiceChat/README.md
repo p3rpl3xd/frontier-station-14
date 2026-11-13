@@ -62,7 +62,7 @@ ws_bind = 127.0.0.1:1213
 
 Use the host and port from `status.bind` in `public_url`. Leave `ws_url` empty. On plain HTTP the page tries `/voice/ws` on the status port, then connects to `ws_bind`. Localhost is a secure context, so the microphone works without HTTPS. A public server needs TLS. Proxy `/voice/ws` to `voice.ws_bind` and `/voice/` to the status port. Do not publish port 1213.
 
-Rebuild the client and the server. In game, F6 or the console command `voicechat` opens the connect window. Hold N for proximity and M for radio. Two clients on one server can hear each other in the lobby, or in range after the round starts. One client can enable hear-self on that window.
+Rebuild the client and the server. In game, F6 or the console command `voicechat` opens the connect window. Open the link, enter the code, and leave the browser page open. Hold N to talk to people nearby. Hold M to talk on the radio channel shown on the button next to the chat channel selector. Click that button to pick Local or a channel your headset can use, and to mute channels you hear. The same button is on the voice window. The three keys are also listed at the bottom of Options, Controls. Two clients on one server can hear each other in the lobby, or in range after the round starts. One client can enable hear-self on that window.
 
 Optional admin voice-of-god is off unless the repository sets `<VoiceChatIncludeGod>true</VoiceChatIncludeGod>` before the import, the way Goob does in `Directory.Build.props`. Megaphone and intrinsic-voice adapters compile only when `LoudspeakerHolderComponent` exists.
 
@@ -132,7 +132,7 @@ The same install is enough for the forks below. Symbols are detected from the tr
 
 **Build says `KeepCallAlive` is missing.** Add the method in the install section. `StateStartTime` cannot be written from another type.
 
-**F6 does nothing.** `Directory.Build.targets` is not importing `Content.VoiceChat.Install.targets`, so the entry point was never compiled. `voicechat` is registered by that entry point.
+**F6 prints `Unknown command: VoiceChatWindow`.** An older build saved that key as a console command. The current build removes that saved bind and registers F6, N, and M as real key binds. If a key still does nothing, open Options, Controls and look for the Voice chat rows at the bottom.
 
 **Microphone stays blocked.** The page is not a secure context. Use `http://127.0.0.1` or `http://localhost` for a local test, or HTTPS in production, and proxy `/voice/ws` to `voice.ws_bind`.
 

@@ -1,7 +1,13 @@
 ui-options-hear-self = Hear yourself in voice chat
 ui-options-voice-chat-volume = Voice Chat Volume
-ui-options-function-voice-push-to-talk = Voice Push-to-Talk (Local)
-ui-options-function-voice-push-to-talk-radio = Voice Push-to-Talk (Radio)
+ui-options-function-voice-push-to-talk = Voice push-to-talk
+ui-options-function-voice-push-to-talk-radio = Voice radio push-to-talk
+ui-options-function-voice-chat-window = Voice window
+voice-how-to-talk = Connect the browser page, then hold { $talk } to talk nearby or { $radio } to talk on the channel shown on the chat bar. Press { $window } to open this window.
+voice-talking = Transmitting nearby.
+voice-talking-radio = Transmitting on radio.
+voice-talking-idle = Not transmitting. Hold the push-to-talk key.
+voice-keybinds-header = Voice chat
 
 ui-escape-voice-chat = Voice Chat
 

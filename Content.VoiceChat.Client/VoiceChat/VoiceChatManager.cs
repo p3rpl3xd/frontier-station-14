@@ -38,6 +38,12 @@ public sealed partial class VoiceChatManager
 
     public bool Deafened { get; private set; }
 
+    public bool Talking { get; private set; }
+
+    public bool TalkingRadio { get; private set; }
+
+    public event Action? TalkingChanged;
+
     public string? PageUrl { get; private set; }
 
     public string? LinkCode { get; private set; }
@@ -94,6 +100,13 @@ public sealed partial class VoiceChatManager
 
     public void SendPushToTalk(bool pressed, bool radio)
     {
+        if (radio)
+            TalkingRadio = pressed;
+        else
+            Talking = pressed;
+
+        TalkingChanged?.Invoke();
+
         if (_net.IsConnected)
             _net.ClientSendMessage(new MsgVoicePushToTalk { Pressed = pressed, Radio = radio });
     }

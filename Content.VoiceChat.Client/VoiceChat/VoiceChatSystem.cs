@@ -14,6 +14,7 @@ using Content.Shared.Verbs;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
@@ -38,8 +39,10 @@ public sealed partial class VoiceSelfState
     public TimeSpan LastReceived;
 }
 
+[KeyFunctions]
 public static class VoiceKeys
 {
+    public static readonly BoundKeyFunction OpenWindow = "VoiceChatWindow";
     public static readonly BoundKeyFunction PushToTalk = "VoicePushToTalk";
     public static readonly BoundKeyFunction PushToTalkRadio = "VoicePushToTalkRadio";
 }
@@ -102,6 +105,7 @@ public sealed partial class VoiceChatSystem : EntitySystem
         base.Initialize();
 
         UpdatesOutsidePrediction = true;
+        VoiceInput.Install(_input, _manager, IoCManager.Resolve<IUserInterfaceManager>());
 
         _manager.FrameReceived += OnFrameReceived;
         _manager.SpeakerInfoReceived += OnSpeakerInfoReceived;
@@ -121,17 +125,6 @@ public sealed partial class VoiceChatSystem : EntitySystem
         SubscribeLocalEvent<GetVerbsEvent<Verb>>(OnGetVerbs);
 
         _overlays.AddOverlay(new VoiceSpeakingOverlay(EntityManager, this));
-
-        _input.RegisterBinding(new KeyBindingRegistration { Function = VoiceKeys.PushToTalk, Type = KeyBindingType.State, BaseKey = Keyboard.Key.N }, markModified: false);
-        _input.RegisterBinding(new KeyBindingRegistration { Function = VoiceKeys.PushToTalkRadio, Type = KeyBindingType.State, BaseKey = Keyboard.Key.M }, markModified: false);
-        _input.SetInputCommand(VoiceKeys.PushToTalk,
-            InputCmdHandler.FromDelegate(
-                _ => _manager.SendPushToTalk(true, false),
-                _ => _manager.SendPushToTalk(false, false)));
-        _input.SetInputCommand(VoiceKeys.PushToTalkRadio,
-            InputCmdHandler.FromDelegate(
-                _ => _manager.SendPushToTalk(true, true),
-                _ => _manager.SendPushToTalk(false, true)));
     }
 
     public override void Shutdown()
@@ -145,12 +138,24 @@ public sealed partial class VoiceChatSystem : EntitySystem
         _overlays.RemoveOverlay<VoiceSpeakingOverlay>();
         _input.SetInputCommand(VoiceKeys.PushToTalk, null);
         _input.SetInputCommand(VoiceKeys.PushToTalkRadio, null);
+        _input.SetInputCommand(VoiceKeys.OpenWindow, null);
         ClearStreams();
     }
+
+    private float _uiScan;
 
     public override void FrameUpdate(float frameTime)
     {
         base.FrameUpdate(frameTime);
+
+        _uiScan += frameTime;
+        if (_uiScan >= 0.5f)
+        {
+            _uiScan = 0f;
+            var ui = IoCManager.Resolve<IUserInterfaceManager>();
+            VoiceKeybindMenu.TryInstall(ui, _input);
+            VoiceRadioHost.Ensure(ui);
+        }
 
         var now = _timing.RealTime;
         UpdateSelf(now, frameTime);
@@ -203,6 +208,9 @@ public sealed partial class VoiceChatSystem : EntitySystem
 
         if ((Self.Flags & VoiceSelfFlags.Whisper) != 0)
             return WhisperColor;
+
+        if (_manager.TalkingRadio)
+            return RadioColor;
 
         return Color.White;
     }
@@ -386,9 +394,11 @@ public sealed partial class VoiceChatSystem : EntitySystem
             Self.Target = default;
 
         VoiceLevelSmoothing.Apply(ref Self.Levels, Self.Target, frameTime);
-        Self.Activity = active
+        var heard = active
             ? 1f
             : MathF.Max(0f, Self.Activity - frameTime / SelfActivityRelease);
+        // Show the indicator as soon as the key is held, before the server echoes audio levels.
+        Self.Activity = _manager.Talking || _manager.TalkingRadio ? MathF.Max(heard, 1f) : heard;
     }
 
     private void OnSpeakerInfoReceived(MsgVoiceSpeakerInfo message)

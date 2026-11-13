@@ -13,23 +13,7 @@ namespace Content.VoiceChat.Client.UI;
 
 public sealed partial class VoiceChatWindowController : UIController
 {
-    [Dependency] private IInputManager _input = default!;
-
-    public static readonly BoundKeyFunction WindowKey = "VoiceChatWindow";
-
     private DefaultWindow? _window;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-        _input.RegisterBinding(new KeyBindingRegistration
-        {
-            Function = WindowKey,
-            Type = KeyBindingType.Command,
-            BaseKey = Keyboard.Key.F6,
-        }, markModified: false);
-        _input.SetInputCommand(WindowKey, InputCmdHandler.FromDelegate(_ => Toggle()));
-    }
 
     public void Toggle()
     {

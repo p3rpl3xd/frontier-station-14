@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Content.VoiceChat.Shared;
+using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
@@ -13,6 +14,7 @@ public sealed partial class VoiceConnectPanel : BoxContainer
 {
     [Dependency] private IClipboardManager _clipboard = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IInputManager _input = default!;
     [Dependency] private VoiceChatManager _voice = default!;
 
     private static readonly Color ConnectedColor = Color.FromHex("#5CD65C");
@@ -24,6 +26,7 @@ public sealed partial class VoiceConnectPanel : BoxContainer
     private readonly Label _code;
     private readonly Slider _volume;
     private readonly CheckBox _hearSelf;
+    private readonly Label _talking;
 
     public VoiceConnectPanel()
     {
@@ -73,6 +76,17 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         _hearSelf.Pressed = _cfg.GetCVar(VoiceCVars.VoiceChatHearSelf);
         _hearSelf.OnToggled += args => _cfg.SetCVar(VoiceCVars.VoiceChatHearSelf, args.Pressed);
         AddChild(_hearSelf);
+
+        AddChild(new VoiceRadioButton { HorizontalExpand = true });
+        AddChild(new Label
+        {
+            Text = Loc.GetString("voice-how-to-talk",
+                ("talk", VoiceInput.Describe(_input, VoiceKeys.PushToTalk, Keyboard.Key.N)),
+                ("radio", VoiceInput.Describe(_input, VoiceKeys.PushToTalkRadio, Keyboard.Key.M)),
+                ("window", VoiceInput.Describe(_input, VoiceKeys.OpenWindow, Keyboard.Key.F6))),
+        });
+        _talking = new Label();
+        AddChild(_talking);
     }
 
     protected override void EnteredTree()
@@ -80,6 +94,7 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         base.EnteredTree();
         _voice.LinkChanged += UpdateState;
         _voice.WebConnectedChanged += OnWebConnectedChanged;
+        _voice.TalkingChanged += OnTalkingChanged;
         _voice.RequestLink();
         UpdateState();
     }
@@ -89,6 +104,7 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         base.ExitedTree();
         _voice.LinkChanged -= UpdateState;
         _voice.WebConnectedChanged -= OnWebConnectedChanged;
+        _voice.TalkingChanged -= OnTalkingChanged;
     }
 
     private void OnWebConnectedChanged(bool connected)
@@ -105,5 +121,15 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         _code.Text = _voice.LinkCode ?? "--------";
         _open.Disabled = !ready;
         _copy.Disabled = !ready;
+        _talking.Text = Loc.GetString(_voice.TalkingRadio
+            ? "voice-talking-radio"
+            : _voice.Talking
+                ? "voice-talking"
+                : "voice-talking-idle");
+    }
+
+    private void OnTalkingChanged()
+    {
+        UpdateState();
     }
 }
