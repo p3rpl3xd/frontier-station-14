@@ -40,6 +40,10 @@ public static class ServerPackaging
         "Content.Server",
         "Content.Shared",
         "Content.Shared.Database",
+        // Proximity voice. The server entry point lives in these assemblies.
+        "Content.VoiceChat.Server",
+        "Content.VoiceChat.Shared",
+        "Content.VoiceChat.Effects",
     };
 
     private static readonly List<string> ServerExtraAssemblies = new()
@@ -48,6 +52,8 @@ public static class ServerPackaging
         "Npgsql",
         "Microsoft",
         "NetCord",
+        // Muffling. Server-only; the launcher client must not receive this.
+        "NWaves",
     };
 
     private static readonly List<string> ServerNotExtraAssemblies = new()

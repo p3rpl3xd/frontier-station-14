@@ -11,6 +11,23 @@ namespace Content.Packaging;
 public static class ClientPackaging
 {
     /// <summary>
+    /// Assemblies copied into the client zip (Magic ACZ on a dev server, and the
+    /// release client zip used by Hybrid ACZ). The launcher sandbox type-checks
+    /// <c>Content.Client</c> against only this set. The voice client is referenced
+    /// by the stock adapter compiled into <c>Content.Client</c>, so its assemblies
+    /// have to be in the zip or ILVerify fails with "Failed to load assembly".
+    /// NWaves is server-only and must not be added here.
+    /// </summary>
+    public static readonly string[] ClientContentAssemblies =
+    {
+        "Content.Client",
+        "Content.Shared",
+        "Content.Shared.Database",
+        "Content.VoiceChat.Client",
+        "Content.VoiceChat.Shared",
+    };
+
+    /// <summary>
     /// Be advised this can be called from server packaging during a HybridACZ build.
     /// </summary>
     public static async Task PackageClient(bool skipBuild, string configuration, IPackageLogger logger)
@@ -75,7 +92,7 @@ public static class ClientPackaging
             inputPass,
             contentDir,
             "Content.Client",
-            new[] { "Content.Client", "Content.Shared", "Content.Shared.Database" },
+            ClientContentAssemblies,
             cancel: cancel);
 
         await RobustClientPackaging.WriteClientResources(contentDir, inputPass, cancel);

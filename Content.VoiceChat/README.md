@@ -11,7 +11,7 @@ Authors: Aidenkrz &lt;28298836+Aidenkrz@users.noreply.github.com&gt; and Aiden &
 This fork already has the projects wired:
 
 - `Content.Server` references `Content.VoiceChat.Server` and `Content.VoiceChat.Effects`, compiles `Adapters/Server/Stock`, and defines `VOICECHAT_SERVER_COMPONENTS`.
-- `Content.Client` references `Content.VoiceChat.Client` and `Content.VoiceChat.Shared`, and compiles `Adapters/Client/Stock`.
+- `Content.Client` references `Content.VoiceChat.Client` and `Content.VoiceChat.Shared`, and compiles `Adapters/Client/Stock`. The dev client zip and `Content.Packaging` both ship those two assemblies. NWaves stays on the server.
 - NWaves 0.9.6 is in `Directory.Packages.props`. The MIT notice is in `THIRD-PARTY-NOTICES.md`.
 - `TelephoneSystem.KeepCallAlive` keeps a call from idling out while voice is flowing. `TelephoneComponent.StateStartTime` is not writable from the adapter.
 - `VoiceCVars` is marked `[CVarDefs]`. RobustToolbox 267 only loads CVars from types with that attribute.
@@ -35,7 +35,16 @@ Copy these directories next to `Content.Server` / `Content.Client`:
 
 The core projects do not reference `Content.Server` or `Content.Client`. Adapters are compiled *into* those projects so they can use fork types without a project cycle.
 
-Any `Content.*.dll` in the server or client output is loaded. The module entry points run with the rest. No extra IoC file is required.
+Any `Content.*.dll` in the server or client output is loaded when you start that build yourself. The official launcher does not download the client output directory. It downloads the client zip: Magic ACZ while developing, or the zip produced by `Content.Packaging` for a release server. That zip's assembly list has to include `Content.VoiceChat.Client` and `Content.VoiceChat.Shared` next to `Content.Client`. The stock client adapter is compiled into `Content.Client` and calls those assemblies. If they are missing, the launcher sandbox dies with `TypeCheckFailedException` / `ILVerify: Failed to load assembly 'Content.VoiceChat.Shared'`.
+
+NWaves is only referenced by `Content.VoiceChat.Effects` on the server. Do not put it in the client zip. A packaged server build does need `NWaves.dll` beside the server, along with `Content.VoiceChat.Server`, `Content.VoiceChat.Shared`, and `Content.VoiceChat.Effects`.
+
+Forks that copy every runtime assembly from the client `deps.json` (Goob does this) already pick the two voice assemblies up. Forks with a hardcoded list, such as Frontier and current Wizden, have to add the names:
+
+```csharp
+"Content.VoiceChat.Client",
+"Content.VoiceChat.Shared",
+```
 
 ## Wire-up
 
