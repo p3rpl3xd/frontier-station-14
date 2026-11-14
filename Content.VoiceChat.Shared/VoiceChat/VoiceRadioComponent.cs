@@ -9,7 +9,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.VoiceChat.Shared;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 public sealed partial class VoiceRadioComponent : Component
 {
     public override bool SendOnlyToOwner => true;

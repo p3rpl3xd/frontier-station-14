@@ -25,11 +25,14 @@ public static class VoiceInput
             Add(common, VoiceKeys.OpenWindow);
             Add(common, VoiceKeys.PushToTalk);
             Add(common, VoiceKeys.PushToTalkRadio);
+            Add(common, VoiceKeys.RadioCycle);
         }
 
         EnsureState(input, VoiceKeys.OpenWindow, Keyboard.Key.F6);
         EnsureState(input, VoiceKeys.PushToTalk, Keyboard.Key.N);
         EnsureState(input, VoiceKeys.PushToTalkRadio, Keyboard.Key.M);
+        // = is free. ] is already admin chat, and a command bind would be run as a console command.
+        EnsureState(input, VoiceKeys.RadioCycle, Keyboard.Key.Equal);
 
         input.SetInputCommand(VoiceKeys.PushToTalk,
             InputCmdHandler.FromDelegate(

@@ -24,7 +24,12 @@ public static class VoiceRadioHost
         foreach (var chat in Find<ChatInputBox>(root))
         {
             if (HasButton(chat))
+            {
+                // Hidden controls do not get FrameUpdate, so a button that starts invisible
+                // never gets a chance to show itself. Refresh it from this system tick.
+                Refresh(chat);
                 continue;
+            }
 
             var parent = chat.ChannelSelector.Parent;
             if (parent == null)
@@ -43,7 +48,17 @@ public static class VoiceRadioHost
             }
 
             button.SetPositionInParent(Math.Min(index + 1, parent.ChildCount - 1));
+            button.UpdateState();
         }
+    }
+
+    private static void Refresh(Control root)
+    {
+        if (root is VoiceRadioButton button)
+            button.UpdateState();
+
+        foreach (var child in root.Children)
+            Refresh(child);
     }
 
     private static bool HasButton(Control root)

@@ -38,6 +38,8 @@ public sealed class VoiceRadioButton : Button
         IoCManager.InjectDependencies(this);
         Name = "VoiceRadioButton";
         MinWidth = 60;
+        // A hidden control does not receive FrameUpdate, so this stays hidden unless a visible
+        // parent calls UpdateState. ChatInputBox and the voice window do that.
         Visible = false;
         ToggleMode = true;
         ToolTip = Loc.GetString("voice-radio-button-tooltip");
@@ -127,7 +129,7 @@ public sealed class VoiceRadioButton : Button
     private void OnTalkSelected(ProtoId<RadioChannelPrototype>? channel)
     {
         Popup.Close();
-        _net.SendSystemNetworkMessage(new VoiceRadioSelectEvent(channel));
+        VoiceRadioClient.Select(_net, _cfg, channel);
     }
 }
 

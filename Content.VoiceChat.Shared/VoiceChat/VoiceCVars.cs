@@ -72,6 +72,9 @@ public static class VoiceCVars
     public static readonly CVarDef<string> VoiceChatRadioMuted =
         CVarDef.Create("voice.radio_muted", "", CVar.CLIENTONLY | CVar.ARCHIVE, "Comma-separated radio channel IDs whose voice chat you don't want to hear.");
 
+    public static readonly CVarDef<string> VoiceRadioChannel =
+        CVarDef.Create("voice.radio_channel", "", CVar.CLIENTONLY | CVar.ARCHIVE, "Radio channel id that push-to-talk transmits on. Empty means the first headset channel until the player picks one.");
+
     public static readonly CVarDef<float> VoiceChatVolume =
         CVarDef.Create("voice.volume", 1f, CVar.CLIENTONLY | CVar.ARCHIVE, "Voice chat playback volume, 0 to 2.");
 

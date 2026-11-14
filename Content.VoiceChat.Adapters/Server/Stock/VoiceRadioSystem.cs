@@ -29,6 +29,7 @@ using Content.Shared.Whitelist;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -47,6 +48,9 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
     [Dependency] private InventorySystem _inventory = default!;
 
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(1);
+
+    // Remembers the talk channel per player so it survives the component being recreated when a headset is removed and worn again.
+    private readonly Dictionary<NetUserId, ProtoId<RadioChannelPrototype>?> _chosen = new();
 
     private readonly List<ProtoId<RadioChannelPrototype>> _channels = new();
     private readonly List<ProtoId<RadioChannelPrototype>> _receive = new();
@@ -333,6 +337,14 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
 
         var voiceRadio = EnsureComp<VoiceRadioComponent>(uid);
         var active = voiceRadio.Active is { } current && _channels.Contains(current) ? current : (ProtoId<RadioChannelPrototype>?) null;
+        if (active == null &&
+            _player.TryGetSessionByEntity(uid, out var session) &&
+            _chosen.TryGetValue(session.UserId, out var chosen) &&
+            chosen is { } remembered &&
+            _channels.Contains(remembered))
+        {
+            active = remembered;
+        }
         if (voiceRadio.Channels.SequenceEqual(_channels) &&
             voiceRadio.Receive.SequenceEqual(_receive) &&
             voiceRadio.Active == active)
@@ -496,6 +508,8 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
 
         if (ev.Channel is { } channel && !voiceRadio.Channels.Contains(channel))
             return;
+
+        _chosen[args.SenderSession.UserId] = ev.Channel;
 
         if (voiceRadio.Active == ev.Channel)
             return;

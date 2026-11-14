@@ -2,11 +2,16 @@
 // SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Content.Shared.Radio;
 using Content.VoiceChat.Shared;
 using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
+using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.VoiceChat.Client.UI;
 
@@ -14,7 +19,11 @@ public sealed partial class VoiceConnectPanel : BoxContainer
 {
     [Dependency] private IClipboardManager _clipboard = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IEntityManager _entities = default!;
+    [Dependency] private IEntityNetworkManager _net = default!;
     [Dependency] private IInputManager _input = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private VoiceChatManager _voice = default!;
 
     private static readonly Color ConnectedColor = Color.FromHex("#5CD65C");
@@ -26,7 +35,12 @@ public sealed partial class VoiceConnectPanel : BoxContainer
     private readonly Label _code;
     private readonly Slider _volume;
     private readonly CheckBox _hearSelf;
+    private readonly VoiceRadioButton _radioButton;
+    private readonly OptionButton _radioChannel;
+    private readonly Label _radioNone;
     private readonly Label _talking;
+    private int _radioSignature = int.MinValue;
+    private bool _radioUpdating;
 
     public VoiceConnectPanel()
     {
@@ -77,7 +91,26 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         _hearSelf.OnToggled += args => _cfg.SetCVar(VoiceCVars.VoiceChatHearSelf, args.Pressed);
         AddChild(_hearSelf);
 
-        AddChild(new VoiceRadioButton { HorizontalExpand = true });
+        _radioButton = new VoiceRadioButton { HorizontalExpand = true };
+        AddChild(_radioButton);
+
+        _radioChannel = new OptionButton { HorizontalExpand = true, Visible = false };
+        _radioChannel.OnItemSelected += args =>
+        {
+            if (_radioUpdating)
+                return;
+
+            _radioChannel.SelectId(args.Id);
+            ProtoId<RadioChannelPrototype>? channel = null;
+            if (args.Id != 0 && _radioChannel.GetItemMetadata(args.Id) is string id && id.Length > 0)
+                channel = id;
+            VoiceRadioClient.Select(_net, _cfg, channel);
+        };
+        _radioNone = new Label { Text = Loc.GetString("voice-radio-window-none") };
+        AddChild(new Label { Text = Loc.GetString("voice-radio-window-channel") });
+        AddChild(_radioChannel);
+        AddChild(_radioNone);
+
         AddChild(new Label
         {
             Text = Loc.GetString("voice-how-to-talk",
@@ -87,6 +120,14 @@ public sealed partial class VoiceConnectPanel : BoxContainer
         });
         _talking = new Label();
         AddChild(_talking);
+    }
+
+    protected override void FrameUpdate(FrameEventArgs args)
+    {
+        base.FrameUpdate(args);
+        // The radio button starts hidden, and a hidden control never receives its own FrameUpdate.
+        _radioButton.UpdateState();
+        UpdateRadioChannel();
     }
 
     protected override void EnteredTree()
@@ -110,6 +151,51 @@ public sealed partial class VoiceConnectPanel : BoxContainer
     private void OnWebConnectedChanged(bool connected)
     {
         UpdateState();
+    }
+
+    private void UpdateRadioChannel()
+    {
+        if (_player.LocalEntity is not { } local ||
+            !_entities.TryGetComponent<VoiceRadioComponent>(local, out var radio) ||
+            radio.Channels.Count == 0)
+        {
+            _radioSignature = int.MinValue;
+            _radioChannel.Visible = false;
+            _radioNone.Visible = true;
+            return;
+        }
+
+        _radioChannel.Visible = true;
+        _radioNone.Visible = false;
+
+        var signature = radio.Channels.Count;
+        foreach (var channel in radio.Channels)
+            signature = HashCode.Combine(signature, channel.Id);
+
+        var selected = radio.Active is { } active ? radio.Channels.IndexOf(active) + 1 : 0;
+        if (signature != _radioSignature)
+        {
+            _radioSignature = signature;
+            _radioUpdating = true;
+            _radioChannel.Clear();
+            _radioChannel.AddItem(Loc.GetString("voice-radio-window-local"), 0);
+            for (var i = 0; i < radio.Channels.Count; i++)
+            {
+                var id = radio.Channels[i];
+                var label = _prototypes.TryIndex(id, out var prototype) ? prototype.LocalizedName : id.Id;
+                _radioChannel.AddItem(label, i + 1);
+                _radioChannel.SetItemMetadata(i + 1, id.Id);
+            }
+
+            _radioUpdating = false;
+        }
+
+        if (_radioChannel.SelectedId != selected)
+        {
+            _radioUpdating = true;
+            _radioChannel.SelectId(selected);
+            _radioUpdating = false;
+        }
     }
 
     private void UpdateState()

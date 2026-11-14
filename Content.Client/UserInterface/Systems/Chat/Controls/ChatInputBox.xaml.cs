@@ -1,7 +1,9 @@
 ﻿using Content.Client.Stylesheets;
 using Content.Shared.Chat;
 using Content.Shared.Input;
+using Content.VoiceChat.Client.UI; // Frontier: voice radio channel selector
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Timing; // Frontier: voice radio channel selector
 
 namespace Content.Client.UserInterface.Systems.Chat.Controls;
 
@@ -9,6 +11,7 @@ namespace Content.Client.UserInterface.Systems.Chat.Controls;
 public class ChatInputBox : PanelContainer
 {
     public readonly ChannelSelectorButton ChannelSelector;
+    public readonly VoiceRadioButton VoiceRadio; // Frontier: voice radio channel selector
     public readonly HistoryLineEdit Input;
     public readonly ChannelFilterButton FilterButton;
     protected readonly BoxContainer Container;
@@ -31,6 +34,12 @@ public class ChatInputBox : PanelContainer
             MinWidth = 75
         };
         Container.AddChild(ChannelSelector);
+        // Frontier: voice radio channel selector, next to the text chat channel button.
+        VoiceRadio = new VoiceRadioButton
+        {
+            StyleClasses = { StyleNano.StyleClassChatChannelSelectorButton },
+        };
+        Container.AddChild(VoiceRadio);
         Input = new HistoryLineEdit
         {
             Name = "Input",
@@ -47,6 +56,12 @@ public class ChatInputBox : PanelContainer
         Container.AddChild(FilterButton);
         AddStyleClass(StyleNano.StyleClassChatSubPanel);
         ChannelSelector.OnChannelSelect += UpdateActiveChannel;
+    }
+
+    protected override void FrameUpdate(FrameEventArgs args) // Frontier: voice radio channel selector
+    {
+        base.FrameUpdate(args);
+        VoiceRadio.UpdateState();
     }
 
     private void UpdateActiveChannel(ChatSelectChannel selectedChannel)

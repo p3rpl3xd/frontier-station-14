@@ -40,6 +40,7 @@ public static class VoiceKeybindMenu
             container.AddChild(new VoiceKeyRow(input, VoiceKeys.OpenWindow, Keyboard.Key.F6, "ui-options-function-voice-chat-window"));
             container.AddChild(new VoiceKeyRow(input, VoiceKeys.PushToTalk, Keyboard.Key.N, "ui-options-function-voice-push-to-talk"));
             container.AddChild(new VoiceKeyRow(input, VoiceKeys.PushToTalkRadio, Keyboard.Key.M, "ui-options-function-voice-push-to-talk-radio"));
+            container.AddChild(new VoiceKeyRow(input, VoiceKeys.RadioCycle, Keyboard.Key.Equal, "ui-options-function-voice-radio-cycle"));
         }
     }
 

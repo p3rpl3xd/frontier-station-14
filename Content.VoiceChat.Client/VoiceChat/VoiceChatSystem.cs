@@ -4,6 +4,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Client.Popups;
+using Content.VoiceChat.Client.UI;
 using Content.VoiceChat.Shared;
 using Content.Shared.Construction;
 using Content.Shared.Doors.Components;
@@ -14,11 +16,13 @@ using Content.Shared.Verbs;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -45,6 +49,7 @@ public static class VoiceKeys
     public static readonly BoundKeyFunction OpenWindow = "VoiceChatWindow";
     public static readonly BoundKeyFunction PushToTalk = "VoicePushToTalk";
     public static readonly BoundKeyFunction PushToTalkRadio = "VoicePushToTalkRadio";
+    public static readonly BoundKeyFunction RadioCycle = "VoiceRadioCycle";
 }
 
 public sealed partial class VoiceChatSystem : EntitySystem
@@ -53,7 +58,10 @@ public sealed partial class VoiceChatSystem : EntitySystem
     [Dependency] private IAudioManager _audioManager = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IEntityNetworkManager _net = default!;
     [Dependency] private IInputManager _input = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private PopupSystem _popup = default!;
     [Dependency] private IOverlayManager _overlays = default!;
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private AudioSystem _audio = default!;
@@ -123,8 +131,31 @@ public sealed partial class VoiceChatSystem : EntitySystem
 
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(_ => OnRoundRestart());
         SubscribeLocalEvent<GetVerbsEvent<Verb>>(OnGetVerbs);
+        SubscribeLocalEvent<VoiceRadioComponent, AfterAutoHandleStateEvent>(OnRadioState);
 
         _overlays.AddOverlay(new VoiceSpeakingOverlay(EntityManager, this));
+        _input.SetInputCommand(VoiceKeys.RadioCycle, InputCmdHandler.FromDelegate(_ => CycleRadioChannel()));
+    }
+
+    private void OnRadioState(Entity<VoiceRadioComponent> entity, ref AfterAutoHandleStateEvent args)
+    {
+        if (_player.LocalEntity != entity.Owner)
+            return;
+
+        VoiceRadioClient.ApplySaved(_net, _cfg, entity.Comp);
+    }
+
+    private void CycleRadioChannel()
+    {
+        if (_player.LocalEntity is not { } local || !TryComp<VoiceRadioComponent>(local, out var radio))
+            return;
+
+        var next = VoiceRadioClient.Cycle(radio);
+        VoiceRadioClient.Select(_net, _cfg, next);
+        var name = next is { } id && _prototype.TryIndex(id, out RadioChannelPrototype? channel)
+            ? channel.LocalizedName
+            : Loc.GetString("voice-radio-window-local");
+        _popup.PopupEntity(Loc.GetString("voice-radio-cycle-popup", ("channel", name)), local);
     }
 
     public override void Shutdown()
@@ -139,6 +170,7 @@ public sealed partial class VoiceChatSystem : EntitySystem
         _input.SetInputCommand(VoiceKeys.PushToTalk, null);
         _input.SetInputCommand(VoiceKeys.PushToTalkRadio, null);
         _input.SetInputCommand(VoiceKeys.OpenWindow, null);
+        _input.SetInputCommand(VoiceKeys.RadioCycle, null);
         ClearStreams();
     }
 

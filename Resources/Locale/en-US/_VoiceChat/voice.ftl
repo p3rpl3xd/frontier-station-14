@@ -3,11 +3,17 @@ ui-options-voice-chat-volume = Voice Chat Volume
 ui-options-function-voice-push-to-talk = Voice push-to-talk
 ui-options-function-voice-push-to-talk-radio = Voice radio push-to-talk
 ui-options-function-voice-chat-window = Voice window
-voice-how-to-talk = Connect the browser page, then hold { $talk } to talk nearby or { $radio } to talk on the channel shown on the chat bar. Press { $window } to open this window.
+ui-options-function-voice-radio-cycle = Cycle voice radio channel
+voice-how-to-talk = Connect the browser page, then hold { $talk } to talk nearby or { $radio } to talk on the channel shown on the chat bar. Press { $window } to open this window. Press = to cycle the radio channel.
 voice-talking = Transmitting nearby.
 voice-talking-radio = Transmitting on radio.
 voice-talking-idle = Not transmitting. Hold the push-to-talk key.
 voice-keybinds-header = Voice chat
+voice-radio-cycle = Cycle the voice radio channel
+voice-radio-cycle-popup = Radio: {$channel}
+voice-radio-window-channel = Radio channel for M
+voice-radio-window-none = Wear a headset to choose a radio channel.
+voice-radio-window-local = Local
 
 ui-escape-voice-chat = Voice Chat
 
