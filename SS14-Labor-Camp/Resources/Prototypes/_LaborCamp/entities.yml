@@ -1,0 +1,152 @@
+# Sentencing locker, prisoner ID, ore redemption, points console, gates, and shuttle access.
+# These parent the upstream genpop pieces. They do not replace them.
+
+- type: entity
+  parent: PrisonerIDCard
+  id: PrisonerIDCardLabor
+  name: labor camp prisoner ID
+  description: A prisoner ID that can carry a labor point goal as well as a genpop timer.
+  components:
+  - type: LaborCampSentence
+  - type: ExpireIdCard
+    expireMessage: labor-camp-id-expire
+    expiredAccess:
+    - GenpopLeave
+    - LaborCampShuttle
+
+- type: entity
+  parent: LockerPrisoner
+  id: LockerPrisonerLabor
+  name: labor camp prisoner locker
+  description: A genpop locker that sentences a prisoner to time, points, or both.
+  suffix: Labor
+  components:
+  - type: LaborCampLocker
+  - type: GenpopLocker
+    idCardProto: PrisonerIDCardLabor
+  - type: UserInterface
+    interfaces:
+      enum.GenpopLockerUiKey.Key:
+        type: LaborCampLockerBoundUserInterface
+
+- type: entity
+  parent: LockerWallBasePrisoner
+  id: LockerWallPrisonerLabor
+  name: labor camp prisoner wall locker
+  description: A wall-mounted genpop locker that sentences a prisoner to time, points, or both.
+  suffix: Labor
+  components:
+  - type: LaborCampLocker
+  - type: GenpopLocker
+    idCardProto: PrisonerIDCardLabor
+  - type: UserInterface
+    interfaces:
+      enum.GenpopLockerUiKey.Key:
+        type: LaborCampLockerBoundUserInterface
+
+- type: entity
+  parent: BaseMachine
+  id: LaborCampRedemption
+  name: labor camp ore redemption
+  description: Feed it ore. The ore's credit value is added to the prisoner's labor points, then the ore is consumed.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/ore_processor.rsi
+    layers:
+    - state: icon
+  - type: LaborCampRedemption
+
+- type: entity
+  parent: BaseComputer
+  id: LaborCampConsole
+  name: labor camp points console
+  description: Shows a prisoner's labor points, the point goal, and the time left on the genpop timer.
+  components:
+  - type: LaborCampConsole
+  - type: ActivatableUI
+    key: enum.LaborCampConsoleUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.LaborCampConsoleUiKey.Key:
+        type: LaborCampConsoleBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  - type: ApcPowerReceiver
+    needsPower: false
+  - type: Sprite
+    layers:
+    - map: ["computerLayerBody"]
+      state: computer
+    - map: ["computerLayerKeyboard"]
+      state: generic_keyboard
+    - map: ["computerLayerScreen"]
+      state: generic
+    - map: ["computerLayerKeys"]
+      state: generic_keys
+    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      state: generic_panel_open
+
+- type: entity
+  parent: TurnstileGenpopEnter
+  id: EnergyGateGenpopEnter
+  name: labor camp entry gate
+  suffix: Genpop Enter
+  description: The genpop entry gate. Prisoner IDs with GenpopEnter access can pass. Security can pass. This fork has no separate energy-barrier entity, so this is the upstream genpop entry turnstile.
+  components:
+  - type: Airtight
+
+- type: entity
+  parent: TurnstileGenpopLeave
+  id: EnergyGateGenpopLeave
+  name: labor camp exit gate
+  suffix: Genpop Leave
+  description: The genpop exit gate. It opens for GenpopLeave, which a prisoner ID gains when the timer or the point goal finishes. Security can pass.
+  components:
+  - type: Airtight
+
+- type: entity
+  parent: ComputerShuttle
+  id: ComputerShuttleLaborCamp
+  name: labor camp shuttle console
+  suffix: Labor Camp
+  description: Pilots the labor camp shuttle. Opens for a served sentence, or for security.
+  components:
+  - type: AccessReader
+    access: [["LaborCampShuttle"], ["Security"]]
+  - type: ActivatableUIRequiresAccess
+  - type: ApcPowerReceiver
+    needsPower: false
+
+- type: entity
+  parent: Airlock
+  id: AirlockLaborCampShuttle
+  name: labor camp shuttle airlock
+  suffix: Labor Camp
+  description: Shuttle dock airlock. Opens for a served sentence, or for security.
+  components:
+  - type: AccessReader
+    access: [["LaborCampShuttle"], ["Security"]]
+
+- type: entity
+  parent: BaseStructure
+  id: SignLaborCamp
+  name: labor camp sign
+  description: A sign for a labor camp outpost.
+  components:
+  - type: Sprite
+    sprite: _LaborCamp/sign.rsi
+    state: icon
+    drawdepth: WallMountedItems
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.4,-0.4,0.4,0.4"
+        density: 20
+        mask:
+        - Impassable
+        layer:
+        - WallLayer

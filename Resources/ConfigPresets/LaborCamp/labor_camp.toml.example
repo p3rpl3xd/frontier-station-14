@@ -1,0 +1,11 @@
+# Example only. This file is not loaded automatically.
+# Paste the block you want into the server config.
+
+[labor_camp]
+enabled = true
+spawn = false
+grid_path = ""
+points_per_credit = 1.0
+radio_channel = "Nfsd"
+spawn_offset_x = 2500
+spawn_offset_y = 2500

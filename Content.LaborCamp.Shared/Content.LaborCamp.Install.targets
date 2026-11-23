@@ -1,0 +1,61 @@
+<!--
+SPDX-FileCopyrightText: 2026 p3rpl3xd
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<Project>
+  <!--
+    Compiles the labor camp pack into the fork's Content.Shared, Content.Client,
+    and Content.Server assemblies. There is no Content.LaborCamp.dll, so the launcher
+    sandbox does not have to whitelist a new assembly.
+    Import this from the repository Directory.Build.targets.
+  -->
+
+  <PropertyGroup>
+    <_LaborSharedDir>$(MSBuildThisFileDirectory)</_LaborSharedDir>
+    <_LaborRepo>$(_LaborSharedDir)..\</_LaborRepo>
+    <_LaborClientDir>$(_LaborRepo)Content.LaborCamp.Client\</_LaborClientDir>
+    <_LaborServerDir>$(_LaborRepo)Content.LaborCamp.Server\</_LaborServerDir>
+    <_LaborTestsDir>$(_LaborRepo)Content.LaborCamp.Tests\</_LaborTestsDir>
+    <_LaborIsShared Condition="'$(MSBuildProjectName)' == 'Content.Shared'">true</_LaborIsShared>
+    <_LaborIsClient Condition="'$(MSBuildProjectName)' == 'Content.Client'">true</_LaborIsClient>
+    <_LaborIsServer Condition="'$(MSBuildProjectName)' == 'Content.Server'">true</_LaborIsServer>
+    <_LaborHost Condition="'$(_LaborIsShared)' == 'true' or '$(_LaborIsClient)' == 'true' or '$(_LaborIsServer)' == 'true'">true</_LaborHost>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_LaborIsShared)' == 'true'">
+    <Compile Include="$(_LaborSharedDir)LaborCamp\**\*.cs" Link="LaborCamp\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_LaborIsClient)' == 'true'">
+    <Compile Include="$(_LaborClientDir)LaborCamp\**\*.cs" Link="LaborCamp\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_LaborIsServer)' == 'true'">
+    <Compile Include="$(_LaborServerDir)LaborCamp\**\*.cs" Link="LaborCamp\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Content.Tests'">
+    <Compile Include="$(_LaborTestsDir)LaborCampPointsTest.cs" Link="LaborCamp\LaborCampPointsTest.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Content.IntegrationTests'">
+    <Compile Include="$(_LaborTestsDir)LaborCampRedeemTest.cs" Link="LaborCamp\LaborCampRedeemTest.cs" />
+  </ItemGroup>
+
+  <Target Name="LaborCampCheckInstall" BeforeTargets="CoreCompile" Condition="'$(_LaborHost)' == 'true'">
+    <Error Condition="!Exists('$(_LaborRepo)Content.Shared\Security\Components\GenpopIdCardComponent.cs')"
+           Text="Labor camp needs the upstream genpop ID (Content.Shared/Security/Components/GenpopIdCardComponent.cs). This fork does not have it." />
+    <Error Condition="'$(_LaborIsServer)' == 'true' and !Exists('$(_LaborRepo)Content.Server\Security\GenpopSystem.cs')"
+           Text="Labor camp needs the upstream genpop system (Content.Server/Security/GenpopSystem.cs). This fork does not have it." />
+    <Message Importance="high" Text="Labor camp points 1.0.0 included in $(MSBuildProjectName)." />
+  </Target>
+
+  <Target Name="LaborCampRemoveSeparateAssemblies" AfterTargets="Build" Condition="'$(_LaborIsClient)' == 'true' or '$(_LaborIsServer)' == 'true'">
+    <ItemGroup>
+      <_StaleLaborDll Include="$(TargetDir)Content.LaborCamp.*.dll" />
+      <_StaleLaborDll Include="$(TargetDir)Content.LaborCamp.*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_StaleLaborDll)" />
+  </Target>
+</Project>

@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)Content.LaborCamp.Shared/Content.LaborCamp.Install.targets" Condition="Exists('$(MSBuildThisFileDirectory)Content.LaborCamp.Shared/Content.LaborCamp.Install.targets')" />
+</Project>

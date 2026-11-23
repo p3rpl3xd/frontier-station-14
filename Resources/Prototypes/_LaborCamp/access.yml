@@ -1,0 +1,4 @@
+# Labor camp access. GenpopEnter and GenpopLeave stay the upstream levels.
+- type: accessLevel
+  id: LaborCampShuttle
+  name: id-card-access-level-labor-camp-shuttle
