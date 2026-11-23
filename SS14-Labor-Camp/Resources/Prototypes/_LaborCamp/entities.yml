@@ -7,6 +7,9 @@
   name: labor camp prisoner ID
   description: A prisoner ID that can carry a labor point goal as well as a genpop timer.
   components:
+  - type: Access
+    tags:
+    - GenpopEnter
   - type: LaborCampSentence
   - type: ExpireIdCard
     expireMessage: labor-camp-id-expire
@@ -30,7 +33,7 @@
         type: LaborCampLockerBoundUserInterface
 
 - type: entity
-  parent: LockerWallBasePrisoner
+  parent: BaseWallLocker
   id: LockerWallPrisonerLabor
   name: labor camp prisoner wall locker
   description: A wall-mounted genpop locker that sentences a prisoner to time, points, or both.
@@ -39,10 +42,16 @@
   - type: LaborCampLocker
   - type: GenpopLocker
     idCardProto: PrisonerIDCardLabor
+  - type: EntityStorageVisuals
+    stateBaseClosed: genpop
+    stateDoorOpen: genpop_open
+    stateDoorClosed: genpop_door_1
   - type: UserInterface
     interfaces:
       enum.GenpopLockerUiKey.Key:
         type: LaborCampLockerBoundUserInterface
+  - type: AccessReader
+    access: [["Security"]]
 
 - type: entity
   parent: BaseMachine
