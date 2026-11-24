@@ -17,7 +17,7 @@ public sealed class LaborCampSpawnCommand : IConsoleCommand
     [Dependency] private IEntityManager _entities = default!;
 
     public string Command => "laborcamp";
-    public string Description => "Spawn a labor camp grid. With no arguments, it appears beside you, or at labor_camp.spawn_offset on the default map.";
+    public string Description => "Spawn a labor camp and its prisoner shuttle, docked. With no arguments, they appear beside you, or at labor_camp.spawn_offset on the default map.";
     public string Help => "laborcamp [x y]";
 
     public void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -73,12 +73,14 @@ public sealed class LaborCampSpawnCommand : IConsoleCommand
             position = grids.ConfiguredOffset();
         }
 
-        if (!grids.TrySpawnCamp(mapId, position, out _))
+        if (!grids.TrySpawnCamp(mapId, position, out _, out _, out var docked))
         {
             shell.WriteError(Loc.GetString("labor-camp-cmd-failed"));
             return;
         }
 
         shell.WriteLine(Loc.GetString("labor-camp-cmd-spawned", ("x", position.X), ("y", position.Y), ("map", mapId)));
+        if (!docked)
+            shell.WriteError(Loc.GetString("labor-camp-cmd-undocked"));
     }
 }

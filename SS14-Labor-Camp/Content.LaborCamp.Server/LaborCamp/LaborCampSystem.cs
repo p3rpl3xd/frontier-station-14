@@ -57,6 +57,7 @@ public sealed class LaborCampSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<LaborCampLockerComponent, ComponentStartup>(OnLockerStartup);
         SubscribeLocalEvent<LaborCampLockerComponent, LaborCampLockerPointsMessage>(OnPoints);
         SubscribeLocalEvent<LaborCampRedemptionComponent, InteractUsingEvent>(OnRedeem);
         SubscribeLocalEvent<LaborCampConsoleComponent, AfterActivatableUIOpenEvent>(OnConsoleOpen);
@@ -176,6 +177,16 @@ public sealed class LaborCampSystem : EntitySystem
             UpdateConsoles(id);
 
         return true;
+    }
+
+    /// <summary>
+    /// Frontier serializes this field as <c>idCardProto</c>. HardLight requires <c>IdCardProto</c> and rejects the other name.
+    /// Setting the property skips both YAML names. The wall locker has no upstream genpop parent, so the component is added here.
+    /// </summary>
+    private void OnLockerStartup(Entity<LaborCampLockerComponent> ent, ref ComponentStartup args)
+    {
+        var genpop = EnsureComp<GenpopLockerComponent>(ent);
+        genpop.IdCardProto = LaborCampPrototypes.PrisonerId;
     }
 
     private void OnPoints(Entity<LaborCampLockerComponent> ent, ref LaborCampLockerPointsMessage args)

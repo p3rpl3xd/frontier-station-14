@@ -19,15 +19,30 @@ ent-EnergyGateGenpopLeave = labor camp exit gate
     .desc = The genpop exit gate. It opens when a sentence is served. Security can pass.
     .suffix = Genpop Leave
 ent-ComputerShuttleLaborCamp = labor camp shuttle console
-    .desc = Pilots the labor camp shuttle. Opens for a served sentence, or for security.
+    .desc = Sends the prisoner shuttle to the labor camp or the main station. It does not pick a free destination.
+    .suffix = Labor Camp
+ent-ThrusterLaborCamp = labor camp thruster
+    .desc = A thruster fixed to the prisoner shuttle. It does not push the ship off its route.
+    .suffix = Labor Camp
+ent-GyroscopeLaborCamp = labor camp gyroscope
+    .desc = A gyroscope fixed to the prisoner shuttle. It does not turn the ship off its route.
+    .suffix = Labor Camp
+ent-WallLaborCamp = labor camp wall
+    .desc = A wall of the prisoner shuttle. It is not meant to be taken apart.
     .suffix = Labor Camp
 ent-AirlockLaborCampShuttle = labor camp shuttle airlock
-    .desc = Shuttle dock airlock. Opens for a served sentence, or for security.
+    .desc = Dock airlock on the prisoner shuttle. Opens for a served sentence, or for security.
     .suffix = Labor Camp
+ent-AirlockLaborCampDock = labor camp dock
+    .desc = Camp side of the prisoner shuttle dock. The helm is on the shuttle.
+    .suffix = Labor Camp
+ent-LaborCampRock = labor camp rock
+    .desc = A mineable rock in the labor camp. It grows back with a new ore roll.
 ent-SignLaborCamp = labor camp sign
     .desc = A sign for a labor camp outpost.
 
 labor-camp-grid-name = Labor Camp
+labor-camp-shuttle-grid-name = Labor Camp Shuttle
 
 labor-camp-id-expire = You have served your sentence. The exit gate and the shuttle are unlocked.
 labor-camp-radio-served = {$name} has finished a labor sentence ({$crime}). The exit gate and shuttle are unlocked.
@@ -70,7 +85,12 @@ labor-camp-console-permanent = Permanent stay. Points are the only way out, if a
 labor-camp-console-served = Sentence served. The exit gate and shuttle are unlocked.
 labor-camp-console-refresh = Refresh
 
+labor-camp-shuttle-denied = The cockpit is locked. Only security can fly this shuttle.
+
 labor-camp-cmd-usage = Usage: laborcamp [x y]
 labor-camp-cmd-failed = Could not spawn a labor camp.
 labor-camp-cmd-no-map = No map to spawn the labor camp on.
-labor-camp-cmd-spawned = Spawned a labor camp at {$x}, {$y} on map {$map}.
+labor-camp-cmd-spawned = Spawned a labor camp and its shuttle at {$x}, {$y} on map {$map}.
+labor-camp-cmd-undocked = The shuttle spawned, but it did not dock. It was left beside the camp.
+labor-camp-cmd-refill-usage = Usage: laborcamp_refill
+labor-camp-cmd-refilled = Refilled {$count} labor camp rocks.

@@ -33,6 +33,27 @@ public sealed class LaborCampCVars
         CVarDef.Create("labor_camp.grid_path", "", CVar.SERVER);
 
     /// <summary>
+    /// Optional shuttle grid file (a ResPath such as /Maps/_LaborCamp/labor_shuttle.yml).
+    /// Empty, missing, or unloadable uses the built-in scaffold shuttle, docked to the camp.
+    /// </summary>
+    public static readonly CVarDef<string> ShuttleGridPath =
+        CVarDef.Create("labor_camp.shuttle_grid_path", "", CVar.SERVER);
+
+    /// <summary>
+    /// Minutes between mine refills. Missing rocks grow back with a new ore roll.
+    /// 0 turns regrowth off. Occupied tiles are skipped.
+    /// </summary>
+    public static readonly CVarDef<float> RockRegrowMinutes =
+        CVarDef.Create("labor_camp.rock_regrow_minutes", 12f, CVar.SERVER);
+
+    /// <summary>
+    /// When true, only Security can open the cockpit door and the helm. The shuttle still flies.
+    /// When false, a served sentence can enter the cockpit and pilot it as well.
+    /// </summary>
+    public static readonly CVarDef<bool> ShuttleLockedRoute =
+        CVarDef.Create("labor_camp.shuttle_locked_route", true, CVar.SERVER);
+
+    /// <summary>
     /// Multiplier on the ore's appraised credit value. 1 means one credit is one point.
     /// </summary>
     public static readonly CVarDef<float> PointsPerCredit =

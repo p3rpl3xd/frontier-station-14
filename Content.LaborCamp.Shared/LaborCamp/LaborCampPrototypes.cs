@@ -17,8 +17,17 @@ public static class LaborCampPrototypes
     public const string LeaveGate = "EnergyGateGenpopLeave";
     public const string ShuttleConsole = "ComputerShuttleLaborCamp";
     public const string ShuttleAirlock = "AirlockLaborCampShuttle";
+    public const string CockpitDoor = "AirlockLaborCampCockpit";
+    public const string CampDock = "AirlockLaborCampDock";
+    public const string ShuttleElectronics = "DoorElectronicsLaborCampShuttle";
+    public const string CampDockElectronics = "DoorElectronicsLaborCampDock";
+    public const string Rock = "LaborCampRock";
     public const string Sign = "SignLaborCamp";
+    public const string Thruster = "ThrusterLaborCamp";
+    public const string Gyroscope = "GyroscopeLaborCamp";
+    public const string Wall = "WallLaborCamp";
 
     public const string ShuttleAccess = "LaborCampShuttle";
+    public const string SecurityAccess = "Security";
     public const string OreTag = "Ore";
 }

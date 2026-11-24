@@ -25,8 +25,6 @@
   suffix: Labor
   components:
   - type: LaborCampLocker
-  - type: GenpopLocker
-    idCardProto: PrisonerIDCardLabor
   - type: UserInterface
     interfaces:
       enum.GenpopLockerUiKey.Key:
@@ -40,8 +38,6 @@
   suffix: Labor
   components:
   - type: LaborCampLocker
-  - type: GenpopLocker
-    idCardProto: PrisonerIDCardLabor
   - type: EntityStorageVisuals
     stateBaseClosed: genpop
     stateDoorOpen: genpop_open
@@ -114,27 +110,155 @@
   - type: Airtight
 
 - type: entity
+  parent: DoorElectronics
+  id: DoorElectronicsLaborCampShuttle
+  suffix: Labor Camp Shuttle
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: AccessReader
+    access: [["LaborCampShuttle"], ["Security"]]
+
+- type: entity
+  parent: DoorElectronics
+  id: DoorElectronicsLaborCampDock
+  suffix: Labor Camp Dock
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: AccessReader
+    access: [["Security"]]
+
+- type: entity
+  parent: DoorElectronics
+  id: DoorElectronicsLaborCampCockpit
+  suffix: Labor Camp Cockpit
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: AccessReader
+    access: [["Security"]]
+
+- type: entity
   parent: ComputerShuttle
   id: ComputerShuttleLaborCamp
   name: labor camp shuttle console
   suffix: Labor Camp
-  description: Pilots the labor camp shuttle. Opens for a served sentence, or for security.
+  description: Helm of the prisoner shuttle. Security flies it. A served sentence does not open this console.
   components:
   - type: AccessReader
-    access: [["LaborCampShuttle"], ["Security"]]
+    access: [["Security"]]
   - type: ActivatableUIRequiresAccess
   - type: ApcPowerReceiver
     needsPower: false
+  - type: Construction
+    deconstructionTarget: null
+  - type: Anchorable
+    flags:
+    - Anchorable
+  - type: RCDDeconstructable
+    deconstructable: false
 
 - type: entity
-  parent: Airlock
+  parent: AirlockShuttle
   id: AirlockLaborCampShuttle
   name: labor camp shuttle airlock
   suffix: Labor Camp
-  description: Shuttle dock airlock. Opens for a served sentence, or for security.
+  description: Dock airlock on the prisoner shuttle. Opens for a served sentence, or for security.
   components:
-  - type: AccessReader
-    access: [["LaborCampShuttle"], ["Security"]]
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsLaborCampShuttle ]
+  - type: Construction
+    deconstructionTarget: null
+  - type: Anchorable
+    flags:
+    - Anchorable
+  - type: RCDDeconstructable
+    deconstructable: false
+
+- type: entity
+  parent: Airlock
+  id: AirlockLaborCampCockpit
+  name: labor camp cockpit
+  suffix: Labor Camp
+  description: The door into the shuttle cockpit. Only security can open it. The helm is on the other side.
+  components:
+  - type: LaborCampCockpitDoor
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsLaborCampCockpit ]
+  - type: Construction
+    deconstructionTarget: null
+  - type: Anchorable
+    flags:
+    - Anchorable
+  - type: RCDDeconstructable
+    deconstructable: false
+
+- type: entity
+  parent: AirlockShuttle
+  id: AirlockLaborCampDock
+  name: labor camp dock
+  suffix: Labor Camp
+  description: Camp side of the prisoner shuttle dock. The shuttle airlock and the helm are on the shuttle.
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsLaborCampDock ]
+
+- type: entity
+  parent: Thruster
+  id: ThrusterLaborCamp
+  name: labor camp thruster
+  suffix: Labor Camp
+  description: A thruster fixed to the prisoner shuttle. Security flies the ship with these.
+  components:
+  - type: Construction
+    deconstructionTarget: null
+  - type: Anchorable
+    flags:
+    - Anchorable
+  - type: ApcPowerReceiver
+    needsPower: false
+  - type: RCDDeconstructable
+    deconstructable: false
+
+- type: entity
+  parent: Gyroscope
+  id: GyroscopeLaborCamp
+  name: labor camp gyroscope
+  suffix: Labor Camp
+  description: A gyroscope fixed to the prisoner shuttle. Security turns the ship with this.
+  components:
+  - type: Construction
+    deconstructionTarget: null
+  - type: Anchorable
+    flags:
+    - Anchorable
+  - type: ApcPowerReceiver
+    needsPower: false
+  - type: RCDDeconstructable
+    deconstructable: false
+
+- type: entity
+  parent: WallSolid
+  id: WallLaborCamp
+  name: labor camp wall
+  suffix: Labor Camp
+  description: A wall of the prisoner shuttle. It is not meant to be taken apart.
+  components:
+  - type: Construction
+    deconstructionTarget: null
+  - type: RCDDeconstructable
+    deconstructable: false
+
+- type: entity
+  parent: AsteroidRock
+  id: LaborCampRock
+  name: labor camp rock
+  description: A mineable rock in the labor camp. It grows back with a new ore roll.
+  components:
+  - type: OreVein
+    oreChance: 1
+    oreRarityPrototypeId: RandomOreDistributionStandard
 
 - type: entity
   parent: BaseStructure

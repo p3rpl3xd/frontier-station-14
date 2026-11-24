@@ -5,6 +5,11 @@
 enabled = true
 spawn = false
 grid_path = ""
+shuttle_grid_path = ""
+rock_regrow_minutes = 12
+# true: only Security can open the cockpit and the helm. The shuttle still flies.
+# false: a served sentence can enter the cockpit and pilot it too.
+shuttle_locked_route = true
 points_per_credit = 1.0
 radio_channel = "Nfsd"
 spawn_offset_x = 2500

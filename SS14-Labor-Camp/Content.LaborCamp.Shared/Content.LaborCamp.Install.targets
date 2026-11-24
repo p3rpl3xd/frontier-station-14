@@ -41,6 +41,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'Content.IntegrationTests'">
     <Compile Include="$(_LaborTestsDir)LaborCampRedeemTest.cs" Link="LaborCamp\LaborCampRedeemTest.cs" />
+    <Compile Include="$(_LaborTestsDir)LaborCampGridTest.cs" Link="LaborCamp\LaborCampGridTest.cs" />
   </ItemGroup>
 
   <Target Name="LaborCampCheckInstall" BeforeTargets="CoreCompile" Condition="'$(_LaborHost)' == 'true'">
@@ -48,7 +49,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
            Text="Labor camp needs the upstream genpop ID (Content.Shared/Security/Components/GenpopIdCardComponent.cs). This fork does not have it." />
     <Error Condition="'$(_LaborIsServer)' == 'true' and !Exists('$(_LaborRepo)Content.Server\Security\GenpopSystem.cs')"
            Text="Labor camp needs the upstream genpop system (Content.Server/Security/GenpopSystem.cs). This fork does not have it." />
-    <Message Importance="high" Text="Labor camp points 1.0.0 included in $(MSBuildProjectName)." />
+    <Message Importance="high" Text="Labor camp points 1.1.0 included in $(MSBuildProjectName)." />
   </Target>
 
   <Target Name="LaborCampRemoveSeparateAssemblies" AfterTargets="Build" Condition="'$(_LaborIsClient)' == 'true' or '$(_LaborIsServer)' == 'true'">

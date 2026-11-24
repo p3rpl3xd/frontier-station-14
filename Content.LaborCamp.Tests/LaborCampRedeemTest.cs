@@ -10,6 +10,7 @@ using Content.Shared.Access.Components;
 using Content.Shared.Access;
 using Content.Shared.LaborCamp;
 using Content.Shared.LaborCamp.Components;
+using Content.Shared.Security.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -31,6 +32,8 @@ public sealed class LaborCampRedeemTest
         LaborCampPrototypes.LeaveGate,
         LaborCampPrototypes.ShuttleConsole,
         LaborCampPrototypes.ShuttleAirlock,
+        LaborCampPrototypes.CampDock,
+        LaborCampPrototypes.Rock,
         LaborCampPrototypes.Sign,
     };
 
@@ -97,7 +100,14 @@ public sealed class LaborCampRedeemTest
             var map = entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
             map.CreateMap(out var mapId);
             var grids = entMan.EntitySysManager.GetEntitySystem<LaborCampGridSystem>();
-            Assert.That(grids.TrySpawnCamp(mapId, Vector2.Zero, out _), Is.True);
+            Assert.That(grids.TrySpawnCamp(mapId, Vector2.Zero, out _, out _, out _), Is.True);
+
+            foreach (var lockerId in new[] { LaborCampPrototypes.Locker, LaborCampPrototypes.WallLocker })
+            {
+                var locker = entMan.SpawnEntity(lockerId, new MapCoordinates(Vector2.Zero, mapId));
+                Assert.That(entMan.TryGetComponent(locker, out GenpopLockerComponent? genpop), Is.True, lockerId);
+                Assert.That((string)genpop!.IdCardProto, Is.EqualTo(LaborCampPrototypes.PrisonerId), lockerId);
+            }
 
             Assert.That(Count<LaborCampRedemptionComponent>(entMan), Is.GreaterThan(0));
             Assert.That(Count<LaborCampConsoleComponent>(entMan), Is.GreaterThan(0));
