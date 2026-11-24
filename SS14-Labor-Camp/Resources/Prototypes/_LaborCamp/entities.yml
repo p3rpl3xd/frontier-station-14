@@ -134,17 +134,27 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: AccessReader
-    access: [["Security"]]
+    access: [["LaborCampShuttle"], ["Security"]]
 
 - type: entity
   parent: ComputerShuttle
   id: ComputerShuttleLaborCamp
   name: labor camp shuttle console
   suffix: Labor Camp
-  description: Helm of the prisoner shuttle. Security flies it. A served sentence does not open this console.
+  description: Helm of the prisoner shuttle. It docks at the labor camp or the main station, and nowhere else.
   components:
   - type: AccessReader
-    access: [["Security"]]
+    access: [["LaborCampShuttle"], ["Security"]]
+  - type: ActivatableUI
+    key: enum.LaborCampShuttleUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.LaborCampShuttleUiKey.Key:
+        type: LaborCampShuttleBoundUserInterface
+      enum.ShuttleConsoleUiKey.Key:
+        type: ShuttleConsoleBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
   - type: ActivatableUIRequiresAccess
   - type: ApcPowerReceiver
     needsPower: false
@@ -179,7 +189,7 @@
   id: AirlockLaborCampCockpit
   name: labor camp cockpit
   suffix: Labor Camp
-  description: The door into the shuttle cockpit. Only security can open it. The helm is on the other side.
+  description: The door into the shuttle cockpit. A served sentence or security can open it. The helm only docks at the camp or the main station.
   components:
   - type: LaborCampCockpitDoor
   - type: ContainerFill
@@ -209,7 +219,7 @@
   id: ThrusterLaborCamp
   name: labor camp thruster
   suffix: Labor Camp
-  description: A thruster fixed to the prisoner shuttle. Security flies the ship with these.
+  description: A thruster fixed to the prisoner shuttle. While the route lock is on, it does not push the ship.
   components:
   - type: Construction
     deconstructionTarget: null
@@ -226,7 +236,7 @@
   id: GyroscopeLaborCamp
   name: labor camp gyroscope
   suffix: Labor Camp
-  description: A gyroscope fixed to the prisoner shuttle. Security turns the ship with this.
+  description: A gyroscope fixed to the prisoner shuttle. While the route lock is on, it does not turn the ship.
   components:
   - type: Construction
     deconstructionTarget: null

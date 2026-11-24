@@ -47,8 +47,9 @@ public sealed class LaborCampCVars
         CVarDef.Create("labor_camp.rock_regrow_minutes", 12f, CVar.SERVER);
 
     /// <summary>
-    /// When true, only Security can open the cockpit door and the helm. The shuttle still flies.
-    /// When false, a served sentence can enter the cockpit and pilot it as well.
+    /// When true, the prisoner shuttle can FTL only between the camp and the round's largest station grid.
+    /// Thrusters and manual piloting do not move it. Set false to fly it like any other shuttle.
+    /// LaborCampShuttle and Security can open the cockpit either way.
     /// </summary>
     public static readonly CVarDef<bool> ShuttleLockedRoute =
         CVarDef.Create("labor_camp.shuttle_locked_route", true, CVar.SERVER);

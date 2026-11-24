@@ -3,9 +3,10 @@
 ## 1.1.0
 
 - The prisoner shuttle is a second grid, loaded from `labor_camp.shuttle_grid_path` or built as a small scaffold, and docked to the camp.
-- A served sentence can board the shuttle dock. The cockpit door and the helm open only for Security while `labor_camp.shuttle_locked_route` is true. The shuttle still flies. The camp grid is static and cannot be piloted.
+- A served sentence can open the cockpit and fly the prisoner shuttle. While `labor_camp.shuttle_locked_route` is true, that helm only docks at the labor camp and the main station, and thrusters do not carry it anywhere else. The camp grid is static and cannot be piloted.
 - Mine rocks are recorded at spawn and grow back on empty tiles. `labor_camp.rock_regrow_minutes` defaults to 12, and `0` turns it off. `laborcamp_refill` forces a refill.
 - Labor lockers assign `PrisonerIDCardLabor` in code so the pack loads on both Frontier (`idCardProto`) and HardLight (`IdCardProto`).
+- The locker name box allows 30 characters. Client and shared code do not use reflection, so the Steam client sandbox can load the pack.
 
 ## 1.0.0
 

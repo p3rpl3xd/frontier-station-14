@@ -85,7 +85,15 @@ labor-camp-console-permanent = Permanent stay. Points are the only way out, if a
 labor-camp-console-served = Sentence served. The exit gate and shuttle are unlocked.
 labor-camp-console-refresh = Refresh
 
-labor-camp-shuttle-denied = The cockpit is locked. Only security can fly this shuttle.
+labor-camp-shuttle-title = Prisoner shuttle
+labor-camp-shuttle-locked = This shuttle only docks at the labor camp and the main station.
+labor-camp-shuttle-unlocked = The route lock is off. Open the normal helm to fly freely.
+labor-camp-shuttle-in-ftl = The shuttle is already in FTL.
+labor-camp-shuttle-to-camp = Labor camp
+labor-camp-shuttle-to-station = Main station
+labor-camp-shuttle-to-named = {$name}
+labor-camp-shuttle-open-helm = Open shuttle helm
+labor-camp-shuttle-denied = You cannot fly this shuttle.
 
 labor-camp-cmd-usage = Usage: laborcamp [x y]
 labor-camp-cmd-failed = Could not spawn a labor camp.

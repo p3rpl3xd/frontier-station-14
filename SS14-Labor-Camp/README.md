@@ -57,7 +57,7 @@ Reset Sentence on the locker resets the timer only. It does not clear points. Cl
 
 This pack does not invent a second access system. A fresh labor ID has the upstream `GenpopEnter` access. When the sentence is served, the official expire step replaces the access with `GenpopLeave` and `LaborCampShuttle`.
 
-The camp and the prisoner shuttle are two grids. A released prisoner can open the shuttle dock and ride. They cannot enter the cockpit or fly the ship. The shuttle itself stays driveable: it has thrusters, a gyroscope, and a normal helm. The camp grid is static, has no shuttle component, and any helm left on it opens only for `Security`.
+The camp and the prisoner shuttle are two grids. A released prisoner can open the shuttle dock, the cockpit, and the helm. They cannot pilot or move the camp. The camp grid is static, has no shuttle component, and any helm left on it opens only for `Security`.
 
 | ID | Use |
 | --- | --- |
@@ -65,15 +65,15 @@ The camp and the prisoner shuttle are two grids. A released prisoner can open th
 | `EnergyGateGenpopLeave` | Exit. Parents `TurnstileGenpopLeave` and adds `Airtight`. Access: `GenpopLeave` or `Security`. |
 | `AirlockLaborCampDock` | Camp side of the dock. Access: `Security`. While the shuttle is docked, the docking system holds both doors open. |
 | `AirlockLaborCampShuttle` | Shuttle side of the dock. Access: `LaborCampShuttle` or `Security`. |
-| `AirlockLaborCampCockpit` | Door between the dock and the helm. Access: `Security` while `labor_camp.shuttle_locked_route` is true. |
-| `ComputerShuttleLaborCamp` | Normal shuttle helm, behind the cockpit door. Access: `Security` while the cvar is true. Does not need power. |
+| `AirlockLaborCampCockpit` | Door between the dock and the helm. Access: `LaborCampShuttle` or `Security`. |
+| `ComputerShuttleLaborCamp` | Helm behind the cockpit door. Access: `LaborCampShuttle` or `Security`. While the route lock is on, it lists only the camp and the main station. Does not need power. |
 | `ThrusterLaborCamp` | Shuttle thruster. Fixed in place. |
 | `GyroscopeLaborCamp` | Shuttle gyroscope. Fixed in place. |
 | `WallLaborCamp` | Shuttle wall. Not meant to be taken apart. |
 | `LaborCampRock` | Mineable rock. Regrows with a new ore roll. |
 | `SignLaborCamp` | A wall sign. |
 
-`LaborCampShuttle` lets a served sentence use the dock airlock. It does not open the cockpit or the helm while `labor_camp.shuttle_locked_route` is true (the default). Set that cvar to false and the cockpit and helm also accept `LaborCampShuttle`. A helm built onto the shuttle later gets the same access. The camp cannot be flown.
+`LaborCampShuttle` lets a served sentence open the dock, the cockpit, and the helm. It does not fly the camp. `Security` can open the same doors. `labor_camp.shuttle_locked_route` does not change that access. It only limits where the shuttle can go.
 
 Frontier and HardLight do not ship a separate energy-barrier entity. The energy-gate IDs are the upstream genpop turnstiles, so a mapped camp is airtight enough for the scaffold room. The original `TurnstileGenpopEnter` and `TurnstileGenpopLeave` prototypes are not modified.
 
@@ -116,7 +116,7 @@ See `Resources/ConfigPresets/LaborCamp/labor_camp.toml.example`. The example is 
 | `labor_camp.grid_path` | empty | A camp grid file to load, for example `/Maps/LaborCamp.yml`. A missing file falls back to the scaffold. |
 | `labor_camp.shuttle_grid_path` | empty | A shuttle grid file, loaded and docked to the camp. Empty or missing uses the scaffold shuttle. |
 | `labor_camp.rock_regrow_minutes` | 12 | Minutes between mine refills. `0` turns regrowth off. Occupied tiles are skipped. |
-| `labor_camp.shuttle_locked_route` | true | Only `Security` can open the cockpit and the helm. The shuttle still flies. `false` also lets a served sentence pilot it. |
+| `labor_camp.shuttle_locked_route` | true | Helm offers only the labor camp and the main station. Thrusters do not move the ship, and it is pulled back if it drifts. `false` restores a normal shuttle helm. |
 | `labor_camp.points_per_credit` | 1 | Multiplier on the ore's appraised price. |
 | `labor_camp.radio_channel` | `Nfsd` | First choice for the fallback radio. Ignored when the ID's own expire radio channel exists. |
 | `labor_camp.spawn_offset_x` | 2500 | World offset from the default map origin. |
@@ -128,9 +128,11 @@ An admin with the mapping flag can run `laborcamp` to spawn the camp and the shu
 
 The camp scaffold is a starter room: walls, the two gates, the camp dock, a locker, the redemption machine, the points console, a sign, lights, an oxygen miner, and a row of `LaborCampRock`. It is not a shuttle. The shuttle scaffold is a separate small grid. The dock airlock is on the north edge. A wall and `AirlockLaborCampCockpit` sit on the next row, so the dock cannot be walked around. The helm, gyroscope, and oxygen miner are south of that door. Two thrusters sit in the east and west walls with their nozzles facing out. Docking uses the same alignment as the shipyard: the named airlocks are paired, the shuttle is moved so those ports meet, and the ports are welded. If that pair cannot align, any other free Airlock dock is tried. If nothing fits, the shuttle stays parked beside the camp and is not docked.
 
-Security can fly the shuttle anywhere with the normal helm, including FTL. A served sentence can board through the dock and cannot open the cockpit or the helm. The cockpit door, helm, thrusters, and walls are not unanchorable, not RCD-deconstructable, and have no deconstruction step. A new helm parented to the shuttle gets the same access. That still leaves a few ways past it: set `labor_camp.shuttle_locked_route` to false, use a Security ID, emag the cockpit door (the helm access check still applies), or have an admin remove the access. Blowing the door open does not grant helm access.
+While `labor_camp.shuttle_locked_route` is true, the helm shows two docks and calls the same FTL-to-dock path a shuttle console uses for a grid. A map click or a beacon on a helm that was built onto the shuttle later is turned into a trip to whichever of those two the ship is not already at. The shuttle component is disabled outside of that FTL, its thrust is cleared, and if it is not docked and sits more than two meters from the last camp or station stop it is moved back. The cockpit door, helm, thrusters, and walls are not unanchorable, not RCD-deconstructable, and have no deconstruction step. A new helm parented to the shuttle gets the same access and the same redirect.
 
-The labor lockers do not set the genpop ID field in YAML. Frontier calls that field `idCardProto` and HardLight requires `IdCardProto`. On startup the pack sets the C# property to `PrisonerIDCardLabor`, including on the wall locker, which has no upstream genpop parent. The name box uses HardLight's `IdCardConsoleComponent.MaxFullNameLength` when that constant exists, and Frontier's `ic.id_job_length` cvar otherwise.
+Set the cvar to false and the shuttle flies normally, including the stock helm. An admin can also remove the route component or call FTL after turning the cvar off. Blowing a hole in the hull does not add a destination. A dock joint can tug the ship for a moment; the next tick pulls it back if it has left the stop.
+
+The labor lockers do not set the genpop ID field in YAML. Frontier calls that field `idCardProto` and HardLight requires `IdCardProto`. On startup the pack sets the C# property to `PrisonerIDCardLabor`, including on the wall locker, which has no upstream genpop parent. The name box allows 30 characters. That is Frontier's `ic.id_job_length` default and HardLight's `IdCardConsoleComponent.MaxFullNameLength`. The client does not reflect either field: the Steam launcher sandbox rejects reflection in Content.Client.
 
 ## License
 

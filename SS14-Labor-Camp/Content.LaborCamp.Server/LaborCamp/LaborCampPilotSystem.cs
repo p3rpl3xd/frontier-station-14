@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Systems;
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
 using Content.Shared.LaborCamp;
@@ -12,33 +13,49 @@ using Robust.Shared.Prototypes;
 namespace Content.Server.LaborCamp;
 
 /// <summary>
-/// Prisoners may pilot the separate shuttle. They may not open a helm on the camp grid.
+/// Prisoners may open a helm on the prisoner shuttle. They may not open one on the camp grid.
 /// The camp grid itself is also static and marked so shuttle thrust does not move it.
 /// </summary>
 public sealed class LaborCampPilotSystem : EntitySystem
 {
     private static readonly ProtoId<AccessLevelPrototype> SecurityAccess = LaborCampPrototypes.SecurityAccess;
+    private static readonly ProtoId<AccessLevelPrototype> ShuttleAccess = LaborCampPrototypes.ShuttleAccess;
 
     [Dependency] private AccessReaderSystem _access = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<ShuttleConsoleComponent, ActivatableUIOpenAttemptEvent>(OnConsoleAttempt);
+        SubscribeLocalEvent<ShuttleConsoleComponent, ComponentStartup>(OnConsoleStartup);
+        // After the host console system, which on HardLight cancels anyone without a pilot tag.
+        SubscribeLocalEvent<LaborCampHelmGuardComponent, ActivatableUIOpenAttemptEvent>(
+            OnConsoleAttempt,
+            after: new[] { typeof(ShuttleConsoleSystem) });
     }
 
-    private void OnConsoleAttempt(EntityUid uid, ShuttleConsoleComponent _, ActivatableUIOpenAttemptEvent args)
+    private void OnConsoleStartup(EntityUid uid, ShuttleConsoleComponent _, ComponentStartup args)
     {
-        if (args.Cancelled)
-            return;
+        EnsureComp<LaborCampHelmGuardComponent>(uid);
+    }
 
+    private void OnConsoleAttempt(EntityUid uid, LaborCampHelmGuardComponent _, ActivatableUIOpenAttemptEvent args)
+    {
         var grid = Transform(uid).GridUid;
-        if (grid is not { } gridUid || !HasComp<LaborCampSiteComponent>(gridUid))
+        if (grid is not { } gridUid)
             return;
 
-        if (_access.FindAccessTags(args.User).Contains(SecurityAccess))
+        if (HasComp<LaborCampSiteComponent>(gridUid))
+        {
+            if (!_access.FindAccessTags(args.User).Contains(SecurityAccess))
+                args.Cancel();
+            return;
+        }
+
+        if (!HasComp<LaborCampShuttleComponent>(gridUid))
             return;
 
-        args.Cancel();
+        var tags = _access.FindAccessTags(args.User);
+        if (tags.Contains(ShuttleAccess) || tags.Contains(SecurityAccess))
+            args.Uncancel();
     }
 }

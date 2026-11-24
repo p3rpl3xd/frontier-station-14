@@ -7,8 +7,8 @@ spawn = false
 grid_path = ""
 shuttle_grid_path = ""
 rock_regrow_minutes = 12
-# true: only Security can open the cockpit and the helm. The shuttle still flies.
-# false: a served sentence can enter the cockpit and pilot it too.
+# true: helm lists only the labor camp and the main station. Thrusters do not move the ship.
+# false: the helm flies like any other shuttle. LaborCampShuttle and Security can open it either way.
 shuttle_locked_route = true
 points_per_credit = 1.0
 radio_channel = "Nfsd"

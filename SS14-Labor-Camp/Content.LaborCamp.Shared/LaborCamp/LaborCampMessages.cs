@@ -32,6 +32,43 @@ public sealed class LaborCampConsoleRefreshMessage : BoundUserInterfaceMessage
 }
 
 [Serializable, NetSerializable]
+public enum LaborCampShuttleUiKey : byte
+{
+    Key
+}
+
+[Serializable, NetSerializable]
+public enum LaborCampShuttleDestination : byte
+{
+    Camp,
+    Station,
+}
+
+[Serializable, NetSerializable]
+public sealed class LaborCampShuttleTravelMessage : BoundUserInterfaceMessage
+{
+    public LaborCampShuttleDestination Destination;
+
+    public LaborCampShuttleTravelMessage(LaborCampShuttleDestination destination)
+    {
+        Destination = destination;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class LaborCampShuttleState : BoundUserInterfaceState
+{
+    public bool Locked;
+    public bool InFtl;
+    public bool CampAvailable;
+    public bool StationAvailable;
+    public bool CampDocked;
+    public bool StationDocked;
+    public string CampName = string.Empty;
+    public string StationName = string.Empty;
+}
+
+[Serializable, NetSerializable]
 public sealed class LaborCampConsoleState : BoundUserInterfaceState
 {
     public bool HasId;

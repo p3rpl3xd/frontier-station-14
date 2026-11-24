@@ -11,6 +11,14 @@ public static class LaborCampPoints
 {
     public const int MaxGoal = 10_000_000;
 
+    /// <summary>
+    /// Prisoner name cap. Frontier's <c>ic.id_job_length</c> default and HardLight's
+    /// <c>IdCardConsoleComponent.MaxFullNameLength</c> are both 30.
+    /// The client uses this constant. The Steam launcher sandbox forbids the reflection
+    /// that would read whichever field the host actually has.
+    /// </summary>
+    public const int MaxPrisonerNameLength = 30;
+
     public static bool HasPointGoal(int pointGoal) => pointGoal > 0;
 
     public static bool HasTimeGoal(float minutes) => minutes > 0f && !float.IsNaN(minutes) && !float.IsInfinity(minutes);

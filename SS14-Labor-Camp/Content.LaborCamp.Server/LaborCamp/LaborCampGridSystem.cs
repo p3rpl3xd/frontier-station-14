@@ -374,7 +374,7 @@ public sealed class LaborCampGridSystem : EntitySystem
         var shuttle = EnsureComp<ShuttleComponent>(grid);
         if (TryComp<PhysicsComponent>(grid, out var body))
             _shuttle.Enable(grid, CompOrNull<FixturesComponent>(grid), body, shuttle);
-        _route.Attach(grid);
+        _route.Attach(grid, camp);
     }
 
     private string ResolveProto(string preferred, string fallback)
@@ -467,10 +467,7 @@ public sealed class LaborCampGridSystem : EntitySystem
                 continue;
 
             var reader = EnsureComp<AccessReaderComponent>(child);
-            _access.TrySetAccesses((child, reader), new List<HashSet<ProtoId<AccessLevelPrototype>>>
-            {
-                new() { SecurityAccess },
-            });
+            LaborCampAccess.SetAny(_access, child, reader, SecurityAccess);
             EnsureComp<ActivatableUIRequiresAccessComponent>(child);
         }
     }
@@ -511,8 +508,9 @@ public sealed class LaborCampGridSystem : EntitySystem
         if (_proto.HasIndex<EntityPrototype>(LaborCampPrototypes.Rock))
             return LaborCampPrototypes.Rock;
 
-        if (_proto.HasIndex<EntityPrototype>("AsteroidRockMining"))
-            return "AsteroidRockMining";
+        EntProtoId fallback = "AsteroidRockMining";
+        if (_proto.HasIndex(fallback))
+            return fallback;
 
         return null;
     }

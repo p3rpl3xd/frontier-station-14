@@ -5,11 +5,15 @@
 
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection;
 using Robust.Server.GameObjects;
 using Content.IntegrationTests;
 using Content.Server.Doors.Systems;
 using Content.Server.LaborCamp;
 using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Events;
+using Content.Server.Shuttles.Systems;
+using Content.Server.Station.Systems;
 using Content.Shared.Access;
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
@@ -20,6 +24,8 @@ using Content.Shared.Mining.Components;
 using Content.Shared.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -96,6 +102,7 @@ public sealed class LaborCampGridTest
         EntityUid shuttle = default;
         EntityUid prisoner = default;
         EntityUid? shuttleConsole = null;
+        Vector2 anchor = default;
 
         await server.WaitAssertion(() =>
         {
@@ -118,6 +125,19 @@ public sealed class LaborCampGridTest
             Assert.That(access.TrySetTags(prisoner, access.TryGetTags(id)!), Is.True);
             shuttleConsole = FindOnGrid(entMan, shuttle, LaborCampPrototypes.ShuttleConsole);
             Assert.That(shuttleConsole, Is.Not.Null);
+
+            var mapManager = server.ResolveDependency<IMapManager>();
+            var tiles = server.ResolveDependency<ITileDefinitionManager>();
+            Assert.That(tiles.TryGetDefinition("Plating", out var plating), Is.True);
+            var stationGrid = mapManager.CreateGridEntity(mapId);
+            var xform = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            xform.SetMapCoordinates(stationGrid.Owner, new MapCoordinates(new Vector2(300f, 300f), mapId));
+            var tile = new Tile(plating!.TileId);
+            map.SetTile(stationGrid.Owner, stationGrid.Comp, Vector2i.Zero, tile);
+            map.SetTile(stationGrid.Owner, stationGrid.Comp, new Vector2i(1, 0), tile);
+            entMan.SpawnEntity("AirlockShuttle", new EntityCoordinates(stationGrid.Owner, new Vector2(0.5f, 0.5f)));
+            var station = entMan.SpawnEntity("TestStation", MapCoordinates.Nullspace);
+            entMan.EntitySysManager.GetEntitySystem<StationSystem>().AddGridToStation(station, stationGrid.Owner);
         });
 
         // Power and grid membership settle on the next ticks. needsPower: false still starts unpowered.
@@ -132,55 +152,78 @@ public sealed class LaborCampGridTest
             Assert.That(airlock, Is.Not.Null);
             Assert.That(cockpit, Is.Not.Null);
             Assert.That(doors.HasAccess(airlock!.Value, prisoner), Is.True, "released ID should open the shuttle dock");
-            Assert.That(doors.HasAccess(cockpit!.Value, prisoner), Is.False, "released ID must not open the cockpit");
-            Assert.That(readers.IsAllowed(prisoner, shuttleConsole!.Value), Is.False);
+            Assert.That(doors.HasAccess(cockpit!.Value, prisoner), Is.True, "released ID should open the cockpit");
+            Assert.That(readers.IsAllowed(prisoner, shuttleConsole!.Value), Is.True);
 
-            var openShuttle = new ActivatableUIOpenAttemptEvent(prisoner, silent: true);
+            var openShuttle = OpenAttempt(prisoner);
             entMan.EventBus.RaiseLocalEvent(shuttleConsole.Value, openShuttle);
-            Assert.That(openShuttle.Cancelled, Is.True, "released ID must not open the shuttle helm");
-            Assert.That(entMan.HasComponent<PilotComponent>(prisoner), Is.False);
+            Assert.That(openShuttle.Cancelled, Is.False, "released ID should open the shuttle helm");
 
-            var security = entMan.SpawnEntity("MobHuman", new EntityCoordinates(shuttle, new Vector2(2.5f, 1.5f)));
-            entMan.EnsureComponent<AccessComponent>(security);
-            var access = entMan.EntitySysManager.GetEntitySystem<SharedAccessSystem>();
-            Assert.That(access.TrySetTags(security, new[]
+            var route = entMan.EntitySysManager.GetEntitySystem<LaborCampShuttleSystem>();
+            Assert.That(route.OfferedDestinations(shuttle), Is.EquivalentTo(new[]
             {
-                new ProtoId<AccessLevelPrototype>(LaborCampPrototypes.SecurityAccess),
-            }), Is.True);
-            Assert.That(doors.HasAccess(cockpit.Value, security), Is.True, "security should open the cockpit");
-            Assert.That(readers.IsAllowed(security, shuttleConsole.Value), Is.True);
+                LaborCampShuttleDestination.Camp,
+                LaborCampShuttleDestination.Station,
+            }));
 
-            var openSecurity = new ActivatableUIOpenAttemptEvent(security, silent: true);
-            entMan.EventBus.RaiseLocalEvent(shuttleConsole.Value, openSecurity);
-            Assert.That(openSecurity.Cancelled, Is.False, "security should open the shuttle helm");
-            entMan.EventBus.RaiseLocalEvent(shuttleConsole.Value, new AfterActivatableUIOpenEvent(security));
-            Assert.That(entMan.TryGetComponent(security, out PilotComponent? pilot), Is.True);
-            Assert.That(pilot!.Console, Is.EqualTo(shuttleConsole));
-            Assert.That(entMan.GetComponent<TransformComponent>(pilot.Console!.Value).GridUid, Is.EqualTo(shuttle));
+            var attempt = new ConsoleFTLAttemptEvent(shuttle, false, string.Empty);
+            entMan.EventBus.RaiseLocalEvent(shuttle, ref attempt);
+            Assert.That(attempt.Cancelled, Is.True, "the map helm cannot pick a free destination");
+
+            var swapped = entMan.SpawnEntity("ComputerShuttle", new EntityCoordinates(shuttle, new Vector2(1.5f, 1.5f)));
+            Assert.That(readers.IsAllowed(prisoner, swapped), Is.True, "a rebuilt helm keeps prisoner access");
+            var swappedAttempt = new ConsoleFTLAttemptEvent(shuttle, false, string.Empty);
+            entMan.EventBus.RaiseLocalEvent(shuttle, ref swappedAttempt);
+            Assert.That(swappedAttempt.Cancelled, Is.True, "a rebuilt helm is still route locked");
 
             var ship = entMan.GetComponent<ShuttleComponent>(shuttle);
-            Assert.That(ship.Enabled, Is.True, "the shuttle stays driveable");
-            Assert.That(entMan.HasComponent<PreventFTLComponent>(shuttle), Is.False);
+            Assert.That(ship.Enabled, Is.False, "manual piloting is disabled");
+            foreach (var value in ship.LinearThrust)
+                Assert.That(value, Is.EqualTo(0f));
+            Assert.That(ship.AngularThrust, Is.EqualTo(0f));
 
-            var unanchor = new UnanchorAttemptEvent(security, shuttleConsole.Value);
+            var unanchor = new UnanchorAttemptEvent(prisoner, shuttleConsole.Value);
             entMan.EventBus.RaiseLocalEvent(shuttleConsole.Value, unanchor);
             Assert.That(unanchor.Cancelled, Is.True, "the helm cannot be unanchored");
+
+            var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            anchor = xformSys.GetWorldPosition(shuttle);
+            entMan.EntitySysManager.GetEntitySystem<DockingSystem>().UndockDocks(shuttle);
+            entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>()
+                .SetLinearVelocity(shuttle, new Vector2(30f, 0f));
+            xformSys.SetWorldPosition(shuttle, anchor + new Vector2(30f, 0f));
 
             var campConsole = entMan.SpawnEntity(
                 LaborCampPrototypes.ShuttleConsole,
                 new EntityCoordinates(camp, new Vector2(8.5f, 5.5f)));
             Assert.That(entMan.GetComponent<TransformComponent>(campConsole).GridUid, Is.EqualTo(camp));
 
-            var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var before = xformSys.GetWorldPosition(camp);
-            var openCamp = new ActivatableUIOpenAttemptEvent(prisoner, silent: true);
+            var openCamp = OpenAttempt(prisoner);
             entMan.EventBus.RaiseLocalEvent(campConsole, openCamp);
             Assert.That(openCamp.Cancelled, Is.True, "released ID must not open a helm on the camp");
-            Assert.That(pilot.Console, Is.EqualTo(shuttleConsole));
             var after = xformSys.GetWorldPosition(camp);
             Assert.That(after.X, Is.EqualTo(before.X).Within(0.01f));
             Assert.That(after.Y, Is.EqualTo(before.Y).Within(0.01f));
             Assert.That(entMan.GetComponent<PhysicsComponent>(camp).BodyType, Is.EqualTo(BodyType.Static));
+        });
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            var back = xformSys.GetWorldPosition(shuttle);
+            Assert.That((back - anchor).Length(), Is.LessThan(2.5f), "the shuttle snaps back instead of flying off");
+            Assert.That(entMan.GetComponent<PhysicsComponent>(shuttle).LinearVelocity.Length(), Is.LessThan(0.1f));
+
+            var route = entMan.EntitySysManager.GetEntitySystem<LaborCampShuttleSystem>();
+            Assert.That(route.TryTravel(shuttleConsole!.Value, LaborCampShuttleDestination.Station), Is.True,
+                "released ID can FTL to the main station");
+            Assert.That(entMan.HasComponent<FTLComponent>(shuttle), Is.True);
+            entMan.RemoveComponent<FTLComponent>(shuttle);
+            Assert.That(route.TryTravel(shuttleConsole.Value, LaborCampShuttleDestination.Camp), Is.True,
+                "released ID can FTL to the labor camp");
 
             entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>().DeleteMap(mapId);
         });
@@ -266,5 +309,19 @@ public sealed class LaborCampGridTest
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Frontier's open-attempt takes a silent flag. HardLight's takes only the user.
+    /// </summary>
+    private static ActivatableUIOpenAttemptEvent OpenAttempt(EntityUid user)
+    {
+        var type = typeof(ActivatableUIOpenAttemptEvent);
+        var two = type.GetConstructor(new[] { typeof(EntityUid), typeof(bool) });
+        if (two != null)
+            return (ActivatableUIOpenAttemptEvent)two.Invoke(new object[] { user, true })!;
+
+        var one = type.GetConstructor(new[] { typeof(EntityUid) })!;
+        return (ActivatableUIOpenAttemptEvent)one.Invoke(new object[] { user })!;
     }
 }

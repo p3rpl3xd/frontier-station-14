@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Globalization;
-using System.Reflection;
-using Content.Shared.Access.Components;
-using Content.Shared.CCVar;
 using Content.Shared.LaborCamp;
 using Content.Shared.Security.Components;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Configuration;
 
 namespace Content.Client.LaborCamp;
 
@@ -36,7 +32,7 @@ public sealed class LaborCampLockerBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
-        var maxName = MaxPrisonerNameLength();
+        var maxName = LaborCampPoints.MaxPrisonerNameLength;
 
         _window = new DefaultWindow
         {
@@ -116,29 +112,6 @@ public sealed class LaborCampLockerBoundUserInterface : BoundUserInterface
                && points <= LaborCampPoints.MaxGoal
                && !string.IsNullOrWhiteSpace(crime)
                && crime.Length <= GenpopLockerComponent.MaxCrimeLength;
-    }
-
-    /// <summary>
-    /// HardLight's genpop window uses <see cref="IdCardConsoleComponent"/>'s name cap.
-    /// Frontier uses <c>CCVars.MaxIdJobLength</c>, which HardLight does not define.
-    /// </summary>
-    private static int MaxPrisonerNameLength()
-    {
-        const int fallback = 30;
-
-        var consoleField = typeof(IdCardConsoleComponent).GetField(
-            "MaxFullNameLength",
-            BindingFlags.Public | BindingFlags.Static);
-        if (consoleField?.GetValue(null) is int consoleLimit && consoleLimit > 0)
-            return consoleLimit;
-
-        var cvarField = typeof(CCVars).GetField(
-            "MaxIdJobLength",
-            BindingFlags.Public | BindingFlags.Static);
-        if (cvarField?.GetValue(null) is CVarDef<int> cvar)
-            return IoCManager.Resolve<IConfigurationManager>().GetCVar(cvar);
-
-        return fallback;
     }
 
     private static BoxContainer Field(string label, Control edit)
